@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Kripto Masası</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kripto Masası">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#14171c;--mu:#6b7280;--bd:#e5e7eb;--ok:#15803d;--okb:#dcfce7;--bad:#b91c1c;--badb:#fee2e2;--wt:#92400e;--wtb:#fef3c7;--nt:#374151;--ntb:#e5e7eb}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b21;--tx:#eceef2;--mu:#98a0ad;--bd:#272b33;--ok:#4ade80;--okb:#12301f;--bad:#f87171;--badb:#3a1618;--wt:#fbbf24;--wtb:#3a2d0e;--nt:#cbd5e1;--ntb:#2a2f38}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 -apple-system,system-ui,sans-serif;padding:max(16px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom))}
+main{max-width:560px;margin:0 auto}
+h1{font-size:22px;margin:4px 0 2px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px}
+.sub{color:var(--mu);font-size:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sym{font-weight:700;font-size:17px}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--ntb);color:var(--nt)}
+.ok{background:var(--okb);color:var(--ok)}.bad{background:var(--badb);color:var(--bad)}.wt{background:var(--wtb);color:var(--wt)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.grid div{background:var(--bg);border-radius:10px;padding:6px 8px}
+.grid small{display:block;color:var(--mu);font-size:11px}
+.grid b{font-size:15px}
+.mu{color:var(--mu);font-size:13px}
+.banner{background:var(--badb);color:var(--bad);border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px}
+pre{white-space:pre-wrap;font:13px/1.45 ui-monospace,Menlo,monospace;margin:0}
+.stats{display:flex;gap:8px}.stats .card{flex:1;text-align:center;margin:0}
+.stats b{font-size:20px;display:block}
+footer{margin-top:22px;color:var(--mu);font-size:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>Kripto Masası</h1>
+<div class="sub" id="upd">Yükleniyor…</div>
+<div id="app"></div>
+<footer>Sadece öneri, yatırım tavsiyesi değildir. Sonuçlar 15 dakikalık mumlarla tahmin edilir; komisyon ve kayma hesaba katılmaz. Stop ve hedef aynı mumdaysa stop sayılır.</footer>
+</main>
+<script>
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fm(x){x=Number(x);if(!isFinite(x))return "-";return String(Number(x.toPrecision(6)))}
+function ago(ms){var m=Math.round(ms/60000);if(m<1)return "az önce";if(m<60)return m+" dk önce";var h=Math.floor(m/60);return h+" sa "+(m%60)+" dk önce"}
+function tm(iso){return new Date(iso).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
+function chip(t,c){return '<span class="chip '+(c||"")+'">'+esc(t)+'</span>'}
+var STC={"HEDEF":"ok","STOP":"bad","AÇIK":"wt","BEKLİYOR":"wt"};
+function sigCard(h){
+  return '<div class="card"><div class="row"><span class="sym">'+esc(h.symbol)+'</span>'+chip(h.status,STC[h.status])+'</div>'+
+  '<div class="grid"><div><small>Giriş</small><b>'+fm(h.entry)+'</b></div><div><small>Stop</small><b>'+fm(h.stop)+'</b></div><div><small>Hedef</small><b>'+fm(h.target)+'</b></div></div>'+
+  '<div class="mu" style="margin-top:6px">Miktar '+fm(h.qty)+' (~'+fm(h.notional)+' USDT) · '+tm(h.time)+' · haber: '+esc(h.news)+'</div></div>';
+}
+fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(function(d){
+  var age=Date.now()-new Date(d.updated).getTime();
+  document.getElementById("upd").textContent="Son tur: "+tm(d.updated)+" ("+ago(age)+")";
+  var h="";
+  if(age>100*60000)h+='<div class="banner">Güncelleme gecikti ('+ago(age)+'). GitHub Actions sekmesinden çalışmayı kontrol et.</div>';
+  if(d.error)h+='<div class="banner">Son turda hata: '+esc(d.error)+'</div>';
+  if(d.btc)h+='<div class="card row"><span>BTC (4 saat)</span>'+chip((d.btc.c4>=0?"+":"")+d.btc.c4+"%"+(d.btc.weak?" zayıf":""),d.btc.weak?"bad":"ok")+'</div>';
+  var act=(d.history||[]).filter(function(x){return x.status==="BEKLİYOR"||x.status==="AÇIK"});
+  h+="<h2>Aktif öneriler</h2>"+(act.length?act.map(sigCard).join(""):'<div class="card mu">Şu an aktif öneri yok.</div>');
+  h+="<h2>Son tur</h2>";
+  if(!d.picks||!d.picks.length)h+='<div class="card mu">'+esc(d.lead||"Olağandışı hareket yok.")+'</div>';
+  else d.picks.forEach(function(p){
+    var dc=p.decision==="AL"?"ok":(p.decision==="BEKLE"?"wt":"bad");
+    h+='<div class="card"><div class="row"><span class="sym">'+esc(p.sym)+'</span>'+chip(p.decision,dc)+'</div>'+
+    '<div class="mu">'+fm(p.price)+' · 24s '+(p.chg>=0?"+":"")+p.chg+'% · hacim '+p.ratio+'x · haber: '+esc(p.news)+'</div>'+
+    '<div class="mu">Risk: '+(p.risk_ok?"geçti":"reddetti")+' ('+esc(p.risk_note)+')'+(p.vote?' · Skeptic: '+esc(p.vote):'')+'</div>'+
+    (p.why&&p.why.length?'<div class="mu">İtiraz: '+esc(p.why.join("; "))+'</div>':'')+
+    (p.note?'<div class="mu">'+esc(p.note)+'</div>':'')+'</div>';
+  });
+  var s=d.stats||{wins:0,losses:0,r:0};
+  h+="<h2>Geçmiş</h2><div class='stats'><div class='card'><b>"+s.wins+"</b><span class='mu'>hedef</span></div><div class='card'><b>"+s.losses+"</b><span class='mu'>stop</span></div><div class='card'><b>"+(s.r>0?"+":"")+s.r+"R</b><span class='mu'>net</span></div></div><div style='height:10px'></div>";
+  var old=(d.history||[]);
+  h+=old.length?old.map(sigCard).join(""):'<div class="card mu">Henüz öneri yok. Çoğu tur sessiz geçer.</div>';
+  document.getElementById("app").innerHTML=h;
+}).catch(function(){
+  document.getElementById("upd").textContent="";
+  document.getElementById("app").innerHTML='<div class="banner">Veri yüklenemedi. İlk çalıştırma henüz bitmemiş olabilir; birkaç dakika sonra yenile.</div>';
+});
+</script>
+</body>
+</html>
