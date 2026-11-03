@@ -3,7 +3,7 @@
 - Sadece Binance'in herkese açık piyasa verisini okur (API anahtarı gerekmez).
 - Hiçbir emir/hesap fonksiyonu yoktur; işlemi sen elle açarsın.
 - Roller: Scanner, News, Entry/Exit, Risk, Skeptic, Desk Lead (hepsi kural tabanlı, AI yok).
-- Çıktı: ekran + desk_log.txt + signals.csv
+- Çıktı: ekran + desk_log.txt + history.json + site/data.json (web paneli için)
 
 Kurulum:  pip install requests
 Çalıştır: python crypto_desk.py          (döngü, her EVERY_MIN dakikada bir)
@@ -54,7 +54,9 @@ STABLES = {"SNDKB", "USDC", "FDUSD", "TUSD", "USDP", "DAI", "EUR", "TRY", "BUSD"
 # =======================================================
 
 LOG = os.path.join(BASE, "desk_log.txt")
-CSV = os.path.join(BASE, "signals.csv")
+HISTORY = os.path.join(BASE, "history.json")
+SITE = os.path.join(BASE, "site")
+FINAL = {"HEDEF", "STOP", "DOLMADI", "SÜRE DOLDU"}
 COOLDOWN_FILE = os.path.join(BASE, "cooldown.json")
 _host = None
 
@@ -72,8 +74,13 @@ def notify(title, text):
     if not NTFY_TOPIC:
         return
     try:
+        hdr = {"Title": title, "Priority": "high"}
+        repo = os.environ.get("GITHUB_REPOSITORY", "")
+        if "/" in repo:
+            owner, name = repo.split("/", 1)
+            hdr["Click"] = f"https://{owner.lower()}.github.io/{name}/"
         requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=text.encode("utf-8"),
-                      headers={"Title": title, "Priority": "high"}, timeout=15)
+                      headers=hdr, timeout=15)
     except requests.RequestException as e:
         print("ntfy hatası:", e)
 
@@ -307,16 +314,85 @@ def save_cd(cd):
         json.dump(cd, f)
 
 
+def load_json(path, default):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+
+def save_json(path, obj):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False)
+
+
+def evaluate(h):
+    """Öneriden sonraki 15 dk mumlara bakıp durumu bulur (stop ve hedef aynı mumdaysa stop sayılır)."""
+    try:
+        raw = api("/api/v3/klines", symbol=h["symbol"], interval="15m",
+                  startTime=int(h["ts"] * 1000), limit=200)
+    except RuntimeError:
+        return h.get("status", "BEKLİYOR")
+    filled = False
+    for k in raw:
+        hi, lo = float(k[2]), float(k[3])
+        if not filled:
+            if lo <= h["entry"]:
+                filled = True
+            else:
+                continue
+        if lo <= h["stop"]:
+            return "STOP"
+        if hi >= h["target"]:
+            return "HEDEF"
+    age = time.time() - h["ts"]
+    if filled:
+        return "AÇIK" if age < 48 * 3600 else "SÜRE DOLDU"
+    return "BEKLİYOR" if age < 24 * 3600 else "DOLMADI"
+
+
+def write_site(snap, hist):
+    os.makedirs(SITE, exist_ok=True)
+    done = [h for h in hist if h["status"] in ("HEDEF", "STOP")]
+    wins = sum(1 for h in done if h["status"] == "HEDEF")
+    losses = len(done) - wins
+    snap["stats"] = {"wins": wins, "losses": losses,
+                     "r": round(wins * RR_TARGET - losses, 2),
+                     "open": sum(1 for h in hist if h["status"] in ("BEKLİYOR", "AÇIK"))}
+    snap["history"] = hist[-30:][::-1]
+    snap["updated"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    save_json(os.path.join(SITE, "data.json"), snap)
+
+
 def run_round():
+    hist = load_json(HISTORY, [])
+    for h in hist:
+        if h.get("status") not in FINAL:
+            h["status"] = evaluate(h)
+    save_json(HISTORY, hist)
+    snap = {"btc": None, "picks": [], "lead": "", "error": ""}
+    try:
+        _round(snap, hist)
+    except Exception as e:
+        snap["error"] = str(e)[:200]
+        raise
+    finally:
+        write_site(snap, hist)
+
+
+def _round(snap, hist):
     now = datetime.datetime.now()
     btc = btc_regime()
+    snap["btc"] = {"c4": round(btc["c4"], 2), "weak": btc["weak"]}
     post("MARKET", f"{now:%Y-%m-%d %H:%M} | BTC 4s: {btc['c4']:+.1f}% "
-                   f"{'(ZAYIF)' if btc['weak'] else ''} | hesap: {ACCOUNT_USDT:g} USDT")
+                   f"{'(ZAYIF)' if btc['weak'] else ''}")
 
     picks = scanner()
     if not picks:
         post("SCANNER", "NOTHING UNUSUAL")
         post("DESK LEAD", "Bu turda öneri yok. (Çoğu tur böyle olmalı.)")
+        snap["lead"] = "Bu turda olağandışı hareket yok."
         return
     post("SCANNER", "\n".join(
         f"{p['sym']} | {fmt(p['price'])} | 24s {p['chg']:+.1f}% | hacim {p['ratio']:.1f}x"
@@ -345,22 +421,26 @@ def run_round():
 
     sk = []
     for p in picks:
+        p["why"] = []
         if p["risk"][0]:
-            p["vote"], why = skeptic(p, btc)
-            sk.append(f"{p['sym']}: " + ("; ".join(why) if why else "güçlü itiraz yok")
+            p["vote"], p["why"] = skeptic(p, btc)
+            sk.append(f"{p['sym']}: " + ("; ".join(p["why"]) if p["why"] else "güçlü itiraz yok")
                       + f"\n  Oy: {p['vote']}")
     post("SKEPTIC", "\n".join(sk) if sk else "Risk'ten geçen plan yok.")
 
     out, approved = [], []
     for p in picks:
         ok = p["risk"][0] and p.get("vote") == "BUY"
+        p["decision"] = "ATLA"
         if ok and len(approved) < MAX_SIGNALS:
             qty = size(p["plan"]["entry"], p["plan"]["stop"])
             notional = qty * p["plan"]["entry"]
             if notional < MIN_NOTIONAL:
-                out.append(f"{p['sym']}: SKIP (pozisyon çok küçük: {notional:.1f} USDT)")
+                p["note"] = f"pozisyon çok küçük ({notional:.1f} USDT)"
+                out.append(f"{p['sym']}: SKIP ({p['note']})")
                 continue
             approved.append(p)
+            p["decision"], p["qty"], p["notional"] = "AL", qty, notional
             pl = p["plan"]
             nw = f"haber: {p['news'][0]}" if p["news"] else "haber yok"
             out.append(
@@ -371,24 +451,34 @@ def run_round():
                 f"  gerekçe: hacim {p['ratio']:.1f}x, 24s {p['chg']:+.1f}%, {nw}")
         else:
             why = p["risk"][1] if not p["risk"][0] else f"Skeptic oyu {p.get('vote')}"
-            out.append(f"{p['sym']}: {'WAIT' if p.get('vote') == 'WAIT' else 'SKIP'} ({why})")
-    post("DESK LEAD", "\n".join(out) + ("\n\nNot: Sadece öneri. Emri sen elle gir; "
-                                        "stopu mutlaka koy." if approved else ""))
+            p["decision"] = "BEKLE" if p.get("vote") == "WAIT" else "ATLA"
+            p["note"] = why
+            out.append(f"{p['sym']}: {p['decision']} ({why})")
+    lead = "\n".join(out) + ("\n\nNot: Sadece öneri. Emri sen elle gir; "
+                             "stopu mutlaka koy." if approved else "")
+    post("DESK LEAD", lead)
+
+    snap["lead"] = lead
+    for p in picks:
+        pl, n = p["plan"], p["news"]
+        snap["picks"].append(dict(
+            sym=p["sym"], price=p["price"], chg=round(p["chg"], 1), ratio=round(p["ratio"], 1),
+            news=n[0] if n else "YOK", headline=n[1] if n else "",
+            entry=pl["entry"], stop=pl["stop"], target=pl["target"],
+            risk_ok=p["risk"][0], risk_note=p["risk"][1], vote=p.get("vote", ""),
+            why=p.get("why", []), decision=p["decision"], note=p.get("note", "")))
 
     if approved:
         notify("Kripto onerisi", "\n\n".join(o for o in out if o.startswith("AL")))
-        new_file = not os.path.exists(CSV)
-        with open(CSV, "a", newline="", encoding="utf-8") as f:
-            w = csv.writer(f)
-            if new_file:
-                w.writerow(["time", "symbol", "entry", "stop", "target", "qty", "news"])
-            for p in approved:
-                pl = p["plan"]
-                w.writerow([f"{now:%Y-%m-%d %H:%M}", p["sym"], fmt(pl["entry"]),
-                            fmt(pl["stop"]), fmt(pl["target"]),
-                            size(pl["entry"], pl["stop"]),
-                            p["news"][0] if p["news"] else "NONE"])
-                cd[p["sym"]] = time.time()
+        for p in approved:
+            pl = p["plan"]
+            hist.append(dict(symbol=p["sym"], ts=time.time(),
+                             time=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                             entry=pl["entry"], stop=pl["stop"], target=pl["target"],
+                             qty=p["qty"], notional=round(p["notional"], 2),
+                             news=p["news"][0] if p["news"] else "YOK", status="BEKLİYOR"))
+            cd[p["sym"]] = time.time()
+        save_json(HISTORY, hist)
         save_cd(cd)
 
 
