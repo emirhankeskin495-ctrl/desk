@@ -62,6 +62,7 @@ HISTORY = os.path.join(BASE, "history.json")
 SITE = os.path.join(BASE, "site")
 FINAL = {"HEDEF", "STOP", "DOLMADI", "SÜRE DOLDU"}
 COOLDOWN_FILE = os.path.join(BASE, "cooldown.json")
+WATCHLIST_FILE = os.path.join(BASE, "watchlist.txt")
 _host = None
 
 
@@ -479,6 +480,28 @@ def size(entry, stop):
     return math.floor(min(by_risk, by_cap) * 1e6) / 1e6
 
 
+def load_watchlist():
+    """watchlist.txt dosyasındaki coinleri okur (PAXG yazman yeter, USDT eklenir)."""
+    try:
+        with open(WATCHLIST_FILE, encoding="utf-8") as f:
+            raw = f.read()
+    except OSError:
+        raw = "PAXG"
+    out = []
+    for line in raw.splitlines():
+        if line.strip().startswith("#"):
+            continue
+        for tok in re.split(r"[,\s]+", line):
+            tok = tok.strip().upper()
+            if not tok:
+                continue
+            if not tok.endswith("USDT"):
+                tok += "USDT"
+            if tok not in out:
+                out.append(tok)
+    return out
+
+
 def load_cd():
     try:
         with open(COOLDOWN_FILE, encoding="utf-8") as f:
@@ -579,17 +602,39 @@ def _round(snap, hist):
                 tech[sym] = None
         return tech[sym]
 
-    for sym in [c[1] for c in cands[:WATCH_N]] + open_syms:
+    pinned = load_watchlist()
+    for sym in pinned + [c[1] for c in cands[:WATCH_N]] + open_syms:
         get_tech(sym)
+    snap["missing"] = [s_ for s_ in pinned if not tech.get(s_)]
+    for s_ in pinned:
+        if tech.get(s_):
+            tech[s_]["pin"] = True
 
     def publish_watch():
         order = {"AL": 0, "SAT": 1, "BEKLE": 2}
-        ws = [t for t in tech.values() if t]
+        pins = [tech[s_] for s_ in pinned if tech.get(s_)]
+        ws = [t for t in tech.values() if t and not t.get("pin")]
         ws.sort(key=lambda t: (order[t["signal"]], -abs(t["score"])))
-        snap["watch"] = ws
+        snap["watch"] = pins + ws
         snap["now"] = {s: tech[s]["raw"] for s in open_syms if tech.get(s)}
 
     publish_watch()
+    cd0 = load_cd()
+    wst = cd0.get("_watch", {})
+    for s_ in pinned:
+        t = tech.get(s_)
+        if not t:
+            continue
+        prev = wst.get(s_)
+        if prev is not None and prev != t["signal"] and t["signal"] in ("AL", "SAT"):
+            extra = (f" Stop {fmt(t['stop'])}, hedef {fmt(t['target'])}." if t["signal"] == "AL"
+                     else " Elinde varsa cikisi dusun, yoksa alma.")
+            notify(f"Takip: {s_[:-4]} {t['signal']}",
+                   f"{s_}: teknik sinyal {prev} -> {t['signal']} (rejim {t['regime']}, "
+                   f"skor {t['score']}, fiyat {fmt(t['price'])}).{extra}")
+        wst[s_] = t["signal"]
+    cd0["_watch"] = wst
+    save_cd(cd0)
     for h in hist:
         t = tech.get(h["symbol"])
         if h["status"] == "AÇIK" and t and t["raw"] == "SAT" and not h.get("exit_warned"):
