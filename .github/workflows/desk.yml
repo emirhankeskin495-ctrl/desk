@@ -1,0 +1,29 @@
+name: crypto-desk
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - run: python crypto_desk.py --once
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ACCOUNT_USDT: ${{ secrets.ACCOUNT_USDT }}
+      - name: Kaydet
+        run: |
+          git config user.name "desk-bot"
+          git config user.email "desk-bot@users.noreply.github.com"
+          git add cooldown.json signals.csv 2>/dev/null || true
+          git diff --cached --quiet || (git commit -m "signals" && git push)
