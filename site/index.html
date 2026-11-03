@@ -45,6 +45,7 @@ svg .gl{stroke:var(--mu);stroke-dasharray:3 3;opacity:.6;stroke-width:.7}
 svg .lvl{stroke-dasharray:4 3;stroke-width:1}
 svg .mAL{fill:var(--ok)}svg .mSAT{fill:var(--bad)}
 svg text{fill:var(--mu);font-size:9px}
+svg .tagU{fill:var(--ok);stroke:none}svg .tagD{fill:var(--bad);stroke:none}svg text.tt{fill:#fff}
 .legend{font-size:12px;color:var(--mu);margin-top:4px}
 details.alg summary{cursor:pointer;font-weight:600}
 details.alg ul{margin:8px 0 0;padding-left:18px;font-size:14px}
@@ -74,16 +75,21 @@ function sigCard(h,now){
   '<div class="mu" style="margin-top:6px">Miktar '+fm(h.qty)+' (~'+fm(h.notional)+' USDT) · '+tm(h.time)+' · haber: '+esc(h.news)+'</div></div>';
 }
 function r1(x){return +x.toFixed(1)}
+function axf(v,rg){var st=rg/4,dec=st>=1?0:Math.min(8,Math.ceil(-Math.log10(st||1))+1);return v.toFixed(dec)}
 function chart(c,lv){
-  var W=360,PH=170,RH=44,MH=44,G=8,TH=14,pad=5,n=c.c.length,step=(W-8)/n,bw=Math.max(1.4,step*.62),i;
+  var W=372,AX=50,Wp=W-AX,PH=180,RH=44,MH=40,G=10,TH=18,pad=6,n=c.c.length,step=(Wp-8)/n,bw=Math.max(1.4,step*.62),i;
   var lo=1e18,hi=-1e18;
   for(i=0;i<n;i++){lo=Math.min(lo,c.l[i],c.bl[i]);hi=Math.max(hi,c.h[i],c.bu[i])}
-  var rg=hi-lo;
+  var rg=hi-lo||hi*.01||1;lo-=rg*.03;hi+=rg*.03;rg=hi-lo;
   lv=(lv||[]).filter(function(v){return v.v>lo-rg*.25&&v.v<hi+rg*.25});
   lv.forEach(function(v){lo=Math.min(lo,v.v);hi=Math.max(hi,v.v)});
+  rg=hi-lo;
   function X(i){return r1(4+step*(i+.5))}
-  function Y(v){return r1(pad+(hi-v)/((hi-lo)||1)*(PH-2*pad))}
-  var s="",up="",dn="";
+  function Y(v){return r1(pad+(hi-v)/(rg||1)*(PH-2*pad))}
+  var H=PH+G+RH+G+MH+TH,s="",up="",dn="";
+  for(i=0;i<=4;i++){var gv=lo+rg*i/4;s+='<line x1="4" x2="'+Wp+'" y1="'+Y(gv)+'" y2="'+Y(gv)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+(Y(gv)+3)+'">'+axf(gv,rg)+'</text>'}
+  var ti=[0,Math.round((n-1)/3),Math.round(2*(n-1)/3),n-1];
+  ti.forEach(function(k,q){var x=X(k);s+='<line x1="'+x+'" x2="'+x+'" y1="0" y2="'+(H-TH)+'" class="gl" style="opacity:.25"/><text x="'+x+'" y="'+(H-4)+'" text-anchor="'+(q===0?"start":q===3?"end":"middle")+'">'+tm(c.t0+(c.t1-c.t0)*k/(n-1))+'</text>'});
   for(i=0;i<n;i++)up+=(i?"L":"M")+X(i)+","+Y(c.bu[i]);
   for(i=n-1;i>=0;i--)dn+="L"+X(i)+","+Y(c.bl[i]);
   s+='<path d="'+up+dn+'Z" class="band"/>';
@@ -95,25 +101,26 @@ function chart(c,lv){
     s+='<rect x="'+r1(X(i)-bw/2)+'" y="'+Y(Math.max(c.o[i],c.c[i]))+'" width="'+r1(bw)+'" height="'+r1(Math.max(1,Math.abs(Y(c.o[i])-Y(c.c[i]))))+'" class="'+cl+'"/>';
   }
   lv.forEach(function(v){
-    s+='<line x1="4" x2="'+W+'" y1="'+Y(v.v)+'" y2="'+Y(v.v)+'" class="lvl" style="stroke:'+v.col+'"/><text x="'+(W-2)+'" y="'+(Y(v.v)-2)+'" text-anchor="end">'+v.t+'</text>';
+    s+='<line x1="4" x2="'+Wp+'" y1="'+Y(v.v)+'" y2="'+Y(v.v)+'" class="lvl" style="stroke:'+v.col+'"/><text x="'+(Wp-2)+'" y="'+(Y(v.v)-2)+'" text-anchor="end">'+v.t+' '+fm(v.v)+'</text>';
   });
   (c.mk||[]).forEach(function(m){
     var x=X(m.i);
     if(m.t==="AL"){var y=Y(c.l[m.i])+4;s+='<polygon points="'+x+","+y+" "+r1(x-4.5)+","+r1(y+9)+" "+r1(x+4.5)+","+r1(y+9)+'" class="mAL"/>'}
     else{var y2=Y(c.h[m.i])-4;s+='<polygon points="'+x+","+y2+" "+r1(x-4.5)+","+r1(y2-9)+" "+r1(x+4.5)+","+r1(y2-9)+'" class="mSAT"/>'}
   });
+  var ly=Y(c.c[n-1]),lc=c.c[n-1]>=c.o[n-1]?"tagU":"tagD";
+  s+='<rect x="'+(Wp+1)+'" y="'+r1(ly-6)+'" width="'+(AX-2)+'" height="12" rx="3" class="'+lc+'"/><text x="'+(Wp+4)+'" y="'+(ly+3)+'" class="tt">'+axf(c.c[n-1],rg)+'</text>';
   var rt=PH+G;
   function RY(v){return r1(rt+(100-v)/100*RH)}
-  s+='<line x1="4" x2="'+W+'" y1="'+RY(70)+'" y2="'+RY(70)+'" class="gl"/><line x1="4" x2="'+W+'" y1="'+RY(30)+'" y2="'+RY(30)+'" class="gl"/>'+ln(c.rsi,"rs",RY)+'<text x="4" y="'+(rt+9)+'">RSI</text>';
+  s+='<line x1="4" x2="'+Wp+'" y1="'+RY(70)+'" y2="'+RY(70)+'" class="gl"/><line x1="4" x2="'+Wp+'" y1="'+RY(30)+'" y2="'+RY(30)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+(RY(70)+3)+'">70</text><text x="'+(Wp+4)+'" y="'+(RY(30)+3)+'">30</text><text x="'+(Wp+4)+'" y="'+(RY(100)+9)+'">RSI '+Math.round(c.rsi[n-1])+'</text>'+ln(c.rsi,"rs",RY);
   var mt=rt+RH+G,mx=0;
   for(i=0;i<n;i++)mx=Math.max(mx,Math.abs(c.mh[i]));
   var z=mt+MH/2;
-  s+='<line x1="4" x2="'+W+'" y1="'+r1(z)+'" y2="'+r1(z)+'" class="gl"/><text x="4" y="'+(mt+9)+'">MACD</text>';
+  s+='<line x1="4" x2="'+Wp+'" y1="'+r1(z)+'" y2="'+r1(z)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+r1(z+3)+'">MACD 0</text>';
   for(i=0;i<n;i++){var hh=mx?c.mh[i]/mx*(MH/2-2):0;s+='<rect x="'+r1(X(i)-bw/2)+'" y="'+r1(hh>=0?z-hh:z)+'" width="'+r1(bw)+'" height="'+r1(Math.max(.6,Math.abs(hh)))+'" class="'+(hh>=0?"up":"dn")+'"/>'}
-  var H=mt+MH+TH;
-  s+='<text x="4" y="'+(H-3)+'">'+tm(c.t0)+'</text><text x="'+(W-2)+'" y="'+(H-3)+'" text-anchor="end">'+tm(c.t1)+'</text>';
+  var L=n-1;
   return '<svg viewBox="0 0 '+W+" "+H+'">'+s+'</svg>'+
-  '<div class="legend"><span style="color:#f59e0b">━ EMA20</span> · <span style="color:#3b82f6">━ EMA50</span> · gri bant: Bollinger · <span style="color:var(--ok)">▲ AL</span> · <span style="color:var(--bad)">▼ SAT</span> (1 saatlik skor; ▲▼ sinyalin değiştiği mum)</div>';
+  '<div class="legend">Son kapanış <b>'+fm(c.c[L])+'</b> · <span style="color:#f59e0b">━ EMA20 '+fm(c.e20[L])+'</span> · <span style="color:#3b82f6">━ EMA50 '+fm(c.e50[L])+'</span> · Bollinger alt/üst '+fm(c.bl[L])+' / '+fm(c.bu[L])+' · <span style="color:var(--ok)">▲ AL</span> <span style="color:var(--bad)">▼ SAT</span> (1 saatlik skorun değiştiği mum)</div>';
 }
 function coinBody(t,d){
   var h='<div class="votes">';
@@ -138,9 +145,10 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   var act=(d.history||[]).filter(function(x){return x.status==="BEKLİYOR"||x.status==="AÇIK"});
   h+="<h2>Aktif öneriler</h2>"+(act.length?act.map(function(x){return sigCard(x,d.now)}).join(""):'<div class="card mu">Şu an aktif öneri yok.</div>');
   var w=d.watch||[];
-  h+="<h2>Teknik analiz (hacme göre ilk "+w.length+" coin)</h2><div class='mu' style='margin-bottom:8px'>Bir coine dokun: grafik, gösterge oyları ve o coinin geçmiş sinyal istatistiği açılır. SAT = elinde varsa çıkmayı düşün, yoksa alma.</div>";
+  h+="<h2>Teknik analiz (★ takip listen + hacim liderleri)</h2><div class='mu' style='margin-bottom:8px'>Bir coine dokun: grafik, gösterge oyları ve geçmiş sinyal istatistiği açılır. SAT = elinde varsa çıkmayı düşün, yoksa alma. Takip listesini repodaki watchlist.txt dosyasından değiştirebilirsin.</div>";
+  if(d.missing&&d.missing.length)h+='<div class="banner">Binance’te bulunamadı: '+esc(d.missing.join(", "))+' (watchlist.txt’yi kontrol et)</div>';
   w.forEach(function(t,i){
-    h+='<details class="card coin" data-i="'+i+'"><summary><div class="row"><span><span class="sym">'+esc(t.sym.replace(/USDT$/,""))+'</span> <span class="mu">'+fm(t.price)+'</span></span>'+chip(t.signal,SGC[t.signal])+'</div>'+
+    h+='<details class="card coin" data-i="'+i+'"><summary><div class="row"><span><span class="sym">'+(t.pin?"★ ":"")+esc(t.sym.replace(/USDT$/,""))+'</span> <span class="mu">'+fm(t.price)+'</span></span>'+chip(t.signal,SGC[t.signal])+'</div>'+
     '<div class="mu">skor '+(t.score>0?"+":"")+t.score+' · '+esc(t.regime)+' · 4s '+esc(t.trend4)+(t.note?' · '+esc(t.note):'')+'</div></summary><div class="cb"></div></details>';
   });
   h+="<h2>Hacim taraması (son tur)</h2>";
