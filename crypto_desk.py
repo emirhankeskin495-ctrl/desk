@@ -32,7 +32,7 @@ MAX_STOP_PCT = 6.0        # Stop girişten bu %'den uzaksa Risk reddeder
 MAX_SIGNALS = 2           # Bir turda en fazla kaç öneri
 COOLDOWN_H = 12           # Aynı coin için tekrar öneri bekleme süresi (saat)
 REQUIRE_NEWS = False      # True yapınca haber (HARD/SOFT) olmadan hiç öneri çıkmaz
-MIN_NOTIONAL = 10.0       # Bundan küçük pozisyonlar atlanır (Binance min ~5 USDT)
+MIN_NOTIONAL = 5.0        # Bundan küçük pozisyonlar atlanır (Binance min ~5 USDT)
 
 HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"]
 NEWS_FEEDS = [
@@ -49,7 +49,7 @@ NAMES = {
     "LTC": ["litecoin"], "NEAR": ["near protocol"], "APT": ["aptos"],
     "ARB": ["arbitrum"], "OP": ["optimism"], "PEPE": ["pepe coin"],
 }
-STABLES = {"USDC", "FDUSD", "TUSD", "USDP", "DAI", "EUR", "TRY", "BUSD",
+STABLES = {"SNDKB", "USDC", "FDUSD", "TUSD", "USDP", "DAI", "EUR", "TRY", "BUSD",
            "USD1", "USDE", "XUSD", "AEUR", "PAXG"}
 # =======================================================
 
