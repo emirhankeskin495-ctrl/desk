@@ -32,6 +32,10 @@ MAX_STOP_PCT = 6.0        # Stop girişten bu %'den uzaksa Risk reddeder
 MAX_SIGNALS = 2           # Bir turda en fazla kaç öneri
 COOLDOWN_H = 12           # Aynı coin için tekrar öneri bekleme süresi (saat)
 REQUIRE_NEWS = False      # True yapınca haber (HARD/SOFT) olmadan hiç öneri çıkmaz
+WATCH_N = 12             # Teknik analiz tablosunda kaç coin izlensin (hacme göre)
+ADX_TREND = 25            # ADX bunun üstündeyse piyasa "trend", altındaysa "yatay" sayılır
+FWD = 6                   # Geçmiş sinyal istatistiği: sinyalden kaç saat sonrasına bakılsın
+CHART_N = 96              # Grafikte gösterilecek mum sayısı (1s)
 MIN_NOTIONAL = 5.0        # Bundan küçük pozisyonlar atlanır (Binance min ~5 USDT)
 
 HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"]
@@ -105,7 +109,7 @@ def api(path, **params):
 
 def klines(sym, interval="1h", limit=60):
     raw = api("/api/v3/klines", symbol=sym, interval=interval, limit=limit)
-    out = [dict(o=float(k[1]), h=float(k[2]), l=float(k[3]), c=float(k[4]),
+    out = [dict(t=int(k[0]), o=float(k[1]), h=float(k[2]), l=float(k[3]), c=float(k[4]),
                 v=float(k[5])) for k in raw]
     return out[:-1]  # son mum henüz kapanmadı, atılır
 
@@ -144,6 +148,171 @@ def fmt(x):
     return f"{x:.6g}"
 
 
+# ---------------- TEKNİK ANALİZ ----------------
+def r6(x):
+    return float(f"{x:.6g}")
+
+
+def ema_series(v, n):
+    k = 2 / (n + 1)
+    out = [v[0]]
+    for x in v[1:]:
+        out.append(x * k + out[-1] * (1 - k))
+    return out
+
+
+def rsi_series(c, n=14):
+    out = [50.0] * len(c)
+    if len(c) < n + 2:
+        return out
+    ag = al = 0.0
+    for i in range(1, n + 1):
+        d = c[i] - c[i - 1]
+        ag += max(d, 0)
+        al += max(-d, 0)
+    ag, al = ag / n, al / n
+    out[n] = 100.0 if al == 0 else 100 - 100 / (1 + ag / al)
+    for i in range(n + 1, len(c)):
+        d = c[i] - c[i - 1]
+        ag = (ag * (n - 1) + max(d, 0)) / n
+        al = (al * (n - 1) + max(-d, 0)) / n
+        out[i] = 100.0 if al == 0 else 100 - 100 / (1 + ag / al)
+    return out
+
+
+def bb_series(c, n=20, m=2.0):
+    mid, up, lo = [], [], []
+    for i in range(len(c)):
+        w = c[max(0, i - n + 1):i + 1]
+        mu = sum(w) / len(w)
+        sd = (sum((x - mu) ** 2 for x in w) / len(w)) ** 0.5
+        mid.append(mu)
+        up.append(mu + m * sd)
+        lo.append(mu - m * sd)
+    return mid, up, lo
+
+
+def adx_series(k, n=14):
+    L = len(k)
+    adx = [0.0] * L
+    if L < 2 * n + 2:
+        return adx
+    tr, pdm, mdm = [0.0] * L, [0.0] * L, [0.0] * L
+    for i in range(1, L):
+        up = k[i]["h"] - k[i - 1]["h"]
+        dn = k[i - 1]["l"] - k[i]["l"]
+        pdm[i] = up if (up > dn and up > 0) else 0.0
+        mdm[i] = dn if (dn > up and dn > 0) else 0.0
+        tr[i] = max(k[i]["h"] - k[i]["l"], abs(k[i]["h"] - k[i - 1]["c"]),
+                    abs(k[i]["l"] - k[i - 1]["c"]))
+    a_tr, a_p, a_m = sum(tr[1:n + 1]), sum(pdm[1:n + 1]), sum(mdm[1:n + 1])
+    dx = [0.0] * L
+    for i in range(n, L):
+        if i > n:
+            a_tr = a_tr - a_tr / n + tr[i]
+            a_p = a_p - a_p / n + pdm[i]
+            a_m = a_m - a_m / n + mdm[i]
+        pdi = 100 * a_p / a_tr if a_tr else 0
+        mdi = 100 * a_m / a_tr if a_tr else 0
+        dx[i] = 100 * abs(pdi - mdi) / (pdi + mdi) if (pdi + mdi) else 0
+    a = sum(dx[n:2 * n]) / n
+    adx[2 * n - 1] = a
+    for i in range(2 * n, L):
+        a = (a * (n - 1) + dx[i]) / n
+        adx[i] = a
+    return adx
+
+
+def build_series(k):
+    c = [x["c"] for x in k]
+    macd = [a - b for a, b in zip(ema_series(c, 12), ema_series(c, 26))]
+    mh = [a - b for a, b in zip(macd, ema_series(macd, 9))]
+    _, bu, bl = bb_series(c)
+    obv = [0.0]
+    for i in range(1, len(k)):
+        obv.append(obv[-1] + (k[i]["v"] if c[i] > c[i - 1] else -k[i]["v"] if c[i] < c[i - 1] else 0))
+    return dict(c=c, h=[x["h"] for x in k], l=[x["l"] for x in k],
+                e20=ema_series(c, 20), e50=ema_series(c, 50), rsi=rsi_series(c),
+                mh=mh, bu=bu, bl=bl, adx=adx_series(k), obv=obv, obvE=ema_series(obv, 20))
+
+
+def score_at(j, S):
+    """Rejime duyarlı bileşik skor: ADX yüksekse trend göstergeleri, düşükse dönüş göstergeleri oy verir."""
+    c = S["c"][j]
+    ema_v = 1 if (S["e20"][j] > S["e50"][j] and c > S["e50"][j]) else \
+        (-1 if (S["e20"][j] < S["e50"][j] and c < S["e50"][j]) else 0)
+    mh, mhp = S["mh"][j], S["mh"][j - 1]
+    macd_v = 1 if (mh > 0 and mh >= mhp) else (-1 if (mh < 0 and mh <= mhp) else 0)
+    hh, ll = max(S["h"][j - 20:j]), min(S["l"][j - 20:j])
+    don_v = 1 if c > hh else (-1 if c < ll else 0)
+    obv_v = 1 if S["obv"][j] > S["obvE"][j] else -1
+    r = S["rsi"][j]
+    rsi_v = 1 if r < 30 else (-1 if r > 70 else 0)
+    bb_v = 1 if c < S["bl"][j] else (-1 if c > S["bu"][j] else 0)
+    if S["adx"][j] >= ADX_TREND:
+        regime = "TREND"
+        v = {"EMA 20/50": ema_v, "MACD": macd_v, "Donchian": don_v, "OBV": obv_v}
+        sc = sum(v.values())
+        sig = "AL" if sc >= 3 else ("SAT" if sc <= -3 else "BEKLE")
+    else:
+        regime = "YATAY"
+        v = {"RSI": rsi_v, "Bollinger": bb_v, "OBV": obv_v}
+        sc = sum(v.values())
+        sig = "AL" if (sc >= 2 and (rsi_v == 1 or bb_v == 1)) else \
+            ("SAT" if (sc <= -2 and (rsi_v == -1 or bb_v == -1)) else "BEKLE")
+    return sc, sig, regime, v
+
+
+def _stat(flips, kind, c):
+    xs = [c[j + FWD] / c[j] - 1 for j, t in flips if t == kind and j + FWD < len(c)]
+    if not xs:
+        return {"n": 0, "hit": 0, "avg": 0}
+    good = [x for x in xs if (x > 0 if kind == "AL" else x < 0)]
+    return {"n": len(xs), "hit": round(100 * len(good) / len(xs)),
+            "avg": round(100 * sum(xs) / len(xs), 2)}
+
+
+def analyze(sym, btc):
+    k = klines(sym, "1h", 500)
+    if len(k) < 120:
+        return None
+    S = build_series(k)
+    L = len(k)
+    res = [None] * L
+    for j in range(60, L):
+        res[j] = score_at(j, S)
+    i = L - 1
+    sc, raw, regime, votes = res[i]
+    flips = [(j, res[j][1]) for j in range(61, L)
+             if res[j][1] != res[j - 1][1] and res[j][1] in ("AL", "SAT")]
+    k4 = klines(sym, "4h", 100)
+    c4 = [x["c"] for x in k4]
+    e20, e50 = ema_series(c4, 20), ema_series(c4, 50)
+    trend4 = "YUKARI" if (c4[-1] > e50[-1] and e20[-1] > e50[-1]) else \
+        ("AŞAĞI" if (c4[-1] < e50[-1] and e20[-1] < e50[-1]) else "YATAY")
+    final, note = raw, ""
+    if raw == "AL" and trend4 == "AŞAĞI":
+        final, note = "BEKLE", "4 saatlik trend aşağı, AL iptal"
+    elif raw == "AL" and btc["weak"]:
+        final, note = "BEKLE", "BTC zayıf, AL iptal"
+    price = S["c"][i]
+    a = atr(k)
+    stop = price - ATR_MULT * a
+    s0 = L - CHART_N
+    rows = lambda arr: [r6(x) for x in arr[s0:]]
+    return dict(
+        sym=sym, price=r6(price), signal=final, raw=raw, score=sc, regime=regime,
+        votes=votes, trend4=trend4, rsi=round(S["rsi"][i]), adx=round(S["adx"][i]),
+        note=note, stop=r6(stop), target=r6(price + RR_TARGET * (price - stop)),
+        stats={"al": _stat(flips, "AL", S["c"]), "sat": _stat(flips, "SAT", S["c"]),
+               "days": round((L - 60) / 24)},
+        chart=dict(t0=k[s0]["t"], t1=k[-1]["t"],
+                   o=rows([x["o"] for x in k]), h=rows(S["h"]), l=rows(S["l"]), c=rows(S["c"]),
+                   e20=rows(S["e20"]), e50=rows(S["e50"]), bu=rows(S["bu"]), bl=rows(S["bl"]),
+                   rsi=[round(x, 1) for x in S["rsi"][s0:]], mh=rows(S["mh"]),
+                   mk=[{"i": j - s0, "t": t} for j, t in flips if j >= s0]))
+
+
 # ---------------- 0. piyasa rejimi ----------------
 def btc_regime():
     k = klines("BTCUSDT", "1h", 30)
@@ -152,7 +321,7 @@ def btc_regime():
 
 
 # ---------------- 1. SCANNER ----------------
-def scanner():
+def universe():
     tk = api("/api/v3/ticker/24hr")
     cands = []
     for t in tk:
@@ -163,6 +332,10 @@ def scanner():
         if qv >= MIN_QUOTE_VOL:
             cands.append((qv, s, float(t["priceChangePercent"]), float(t["lastPrice"])))
     cands.sort(reverse=True)
+    return cands
+
+
+def scanner(cands):
     picks = []
     for qv, s, chg, price in cands[:TOP_N]:
         try:
@@ -266,10 +439,15 @@ def risk_check(p, btc, cooldown):
 
 
 # ---------------- 5. SKEPTIC ----------------
-def skeptic(p, btc):
+def skeptic(p, btc, tech=None):
     k = p["k"]
     closes = [x["c"] for x in k]
     why = []
+    if tech:
+        if tech["raw"] == "SAT":
+            why.append("teknik skor SAT (trend/momentum aşağı)")
+        elif tech["trend4"] == "AŞAĞI":
+            why.append("4 saatlik trend aşağı")
     if p["chg"] > 15:
         why.append(f"24s +%{p['chg']:.0f}: hareketin büyük kısmı fiyatlanmış olabilir")
     r = rsi(closes)
@@ -388,7 +566,39 @@ def _round(snap, hist):
     post("MARKET", f"{now:%Y-%m-%d %H:%M} | BTC 4s: {btc['c4']:+.1f}% "
                    f"{'(ZAYIF)' if btc['weak'] else ''}")
 
-    picks = scanner()
+    cands = universe()
+    open_syms = [h["symbol"] for h in hist if h["status"] in ("BEKLİYOR", "AÇIK")]
+    tech = {}
+
+    def get_tech(sym):
+        if sym not in tech:
+            try:
+                tech[sym] = analyze(sym, btc)
+            except Exception as e:
+                print("analiz hatası", sym, e)
+                tech[sym] = None
+        return tech[sym]
+
+    for sym in [c[1] for c in cands[:WATCH_N]] + open_syms:
+        get_tech(sym)
+
+    def publish_watch():
+        order = {"AL": 0, "SAT": 1, "BEKLE": 2}
+        ws = [t for t in tech.values() if t]
+        ws.sort(key=lambda t: (order[t["signal"]], -abs(t["score"])))
+        snap["watch"] = ws
+        snap["now"] = {s: tech[s]["raw"] for s in open_syms if tech.get(s)}
+
+    publish_watch()
+    for h in hist:
+        t = tech.get(h["symbol"])
+        if h["status"] == "AÇIK" and t and t["raw"] == "SAT" and not h.get("exit_warned"):
+            notify("SAT uyarisi", f"{h['symbol']}: teknik skor SAT verdi. "
+                                  f"Bu coini aldiysan cikisi dusun (stop {fmt(h['stop'])}).")
+            h["exit_warned"] = True
+            save_json(HISTORY, hist)
+
+    picks = scanner(cands)
     if not picks:
         post("SCANNER", "NOTHING UNUSUAL")
         post("DESK LEAD", "Bu turda öneri yok. (Çoğu tur böyle olmalı.)")
@@ -423,7 +633,7 @@ def _round(snap, hist):
     for p in picks:
         p["why"] = []
         if p["risk"][0]:
-            p["vote"], p["why"] = skeptic(p, btc)
+            p["vote"], p["why"] = skeptic(p, btc, get_tech(p["sym"]))
             sk.append(f"{p['sym']}: " + ("; ".join(p["why"]) if p["why"] else "güçlü itiraz yok")
                       + f"\n  Oy: {p['vote']}")
     post("SKEPTIC", "\n".join(sk) if sk else "Risk'ten geçen plan yok.")
@@ -459,6 +669,7 @@ def _round(snap, hist):
     post("DESK LEAD", lead)
 
     snap["lead"] = lead
+    publish_watch()
     for p in picks:
         pl, n = p["plan"], p["news"]
         snap["picks"].append(dict(
