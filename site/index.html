@@ -18,7 +18,7 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:10px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sym{font-weight:700;font-size:17px}
-.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--ntb);color:var(--nt)}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--ntb);color:var(--nt);white-space:nowrap}
 .ok{background:var(--okb);color:var(--ok)}.bad{background:var(--badb);color:var(--bad)}.wt{background:var(--wtb);color:var(--wt)}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
 .grid div{background:var(--bg);border-radius:10px;padding:6px 8px}
@@ -26,9 +26,29 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);
 .grid b{font-size:15px}
 .mu{color:var(--mu);font-size:13px}
 .banner{background:var(--badb);color:var(--bad);border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px}
-pre{white-space:pre-wrap;font:13px/1.45 ui-monospace,Menlo,monospace;margin:0}
 .stats{display:flex;gap:8px}.stats .card{flex:1;text-align:center;margin:0}
 .stats b{font-size:20px;display:block}
+details.coin{padding:0}
+details.coin>summary{list-style:none;cursor:pointer;padding:12px 14px}
+details.coin>summary::-webkit-details-marker{display:none}
+details.coin .cb{padding:0 14px 12px}
+.votes{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+svg{display:block;width:100%;height:auto;margin-top:8px}
+svg path{fill:none}
+svg .up{fill:var(--ok);stroke:var(--ok)}svg .dn{fill:var(--bad);stroke:var(--bad)}
+svg rect.up,svg rect.dn{stroke:none}
+svg .band{fill:var(--mu);opacity:.12}
+svg .bb{stroke:var(--mu);stroke-width:.8;opacity:.6}
+svg .e20{stroke:#f59e0b;stroke-width:1.4}svg .e50{stroke:#3b82f6;stroke-width:1.4}
+svg .rs{stroke:#a855f7;stroke-width:1.2}
+svg .gl{stroke:var(--mu);stroke-dasharray:3 3;opacity:.6;stroke-width:.7}
+svg .lvl{stroke-dasharray:4 3;stroke-width:1}
+svg .mAL{fill:var(--ok)}svg .mSAT{fill:var(--bad)}
+svg text{fill:var(--mu);font-size:9px}
+.legend{font-size:12px;color:var(--mu);margin-top:4px}
+details.alg summary{cursor:pointer;font-weight:600}
+details.alg ul{margin:8px 0 0;padding-left:18px;font-size:14px}
+details.alg li{margin-bottom:5px}
 footer{margin-top:22px;color:var(--mu);font-size:12px}
 </style>
 </head>
@@ -46,10 +66,67 @@ function ago(ms){var m=Math.round(ms/60000);if(m<1)return "az önce";if(m<60)ret
 function tm(iso){return new Date(iso).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
 function chip(t,c){return '<span class="chip '+(c||"")+'">'+esc(t)+'</span>'}
 var STC={"HEDEF":"ok","STOP":"bad","AÇIK":"wt","BEKLİYOR":"wt"};
-function sigCard(h){
-  return '<div class="card"><div class="row"><span class="sym">'+esc(h.symbol)+'</span>'+chip(h.status,STC[h.status])+'</div>'+
+var SGC={"AL":"ok","SAT":"bad","BEKLE":""};
+function sigCard(h,now){
+  var tc=now&&now[h.symbol]?chip("Teknik: "+now[h.symbol],SGC[now[h.symbol]]):"";
+  return '<div class="card"><div class="row"><span class="sym">'+esc(h.symbol)+'</span><span>'+tc+" "+chip(h.status,STC[h.status])+'</span></div>'+
   '<div class="grid"><div><small>Giriş</small><b>'+fm(h.entry)+'</b></div><div><small>Stop</small><b>'+fm(h.stop)+'</b></div><div><small>Hedef</small><b>'+fm(h.target)+'</b></div></div>'+
   '<div class="mu" style="margin-top:6px">Miktar '+fm(h.qty)+' (~'+fm(h.notional)+' USDT) · '+tm(h.time)+' · haber: '+esc(h.news)+'</div></div>';
+}
+function r1(x){return +x.toFixed(1)}
+function chart(c,lv){
+  var W=360,PH=170,RH=44,MH=44,G=8,TH=14,pad=5,n=c.c.length,step=(W-8)/n,bw=Math.max(1.4,step*.62),i;
+  var lo=1e18,hi=-1e18;
+  for(i=0;i<n;i++){lo=Math.min(lo,c.l[i],c.bl[i]);hi=Math.max(hi,c.h[i],c.bu[i])}
+  var rg=hi-lo;
+  lv=(lv||[]).filter(function(v){return v.v>lo-rg*.25&&v.v<hi+rg*.25});
+  lv.forEach(function(v){lo=Math.min(lo,v.v);hi=Math.max(hi,v.v)});
+  function X(i){return r1(4+step*(i+.5))}
+  function Y(v){return r1(pad+(hi-v)/((hi-lo)||1)*(PH-2*pad))}
+  var s="",up="",dn="";
+  for(i=0;i<n;i++)up+=(i?"L":"M")+X(i)+","+Y(c.bu[i]);
+  for(i=n-1;i>=0;i--)dn+="L"+X(i)+","+Y(c.bl[i]);
+  s+='<path d="'+up+dn+'Z" class="band"/>';
+  function ln(a,cl,Yf){var d="";for(var j=0;j<n;j++)d+=(j?"L":"M")+X(j)+","+Yf(a[j]);return '<path d="'+d+'" class="'+cl+'"/>'}
+  s+=ln(c.bu,"bb",Y)+ln(c.bl,"bb",Y)+ln(c.e50,"e50",Y)+ln(c.e20,"e20",Y);
+  for(i=0;i<n;i++){
+    var cl=c.c[i]>=c.o[i]?"up":"dn";
+    s+='<line x1="'+X(i)+'" x2="'+X(i)+'" y1="'+Y(c.h[i])+'" y2="'+Y(c.l[i])+'" class="'+cl+'"/>';
+    s+='<rect x="'+r1(X(i)-bw/2)+'" y="'+Y(Math.max(c.o[i],c.c[i]))+'" width="'+r1(bw)+'" height="'+r1(Math.max(1,Math.abs(Y(c.o[i])-Y(c.c[i]))))+'" class="'+cl+'"/>';
+  }
+  lv.forEach(function(v){
+    s+='<line x1="4" x2="'+W+'" y1="'+Y(v.v)+'" y2="'+Y(v.v)+'" class="lvl" style="stroke:'+v.col+'"/><text x="'+(W-2)+'" y="'+(Y(v.v)-2)+'" text-anchor="end">'+v.t+'</text>';
+  });
+  (c.mk||[]).forEach(function(m){
+    var x=X(m.i);
+    if(m.t==="AL"){var y=Y(c.l[m.i])+4;s+='<polygon points="'+x+","+y+" "+r1(x-4.5)+","+r1(y+9)+" "+r1(x+4.5)+","+r1(y+9)+'" class="mAL"/>'}
+    else{var y2=Y(c.h[m.i])-4;s+='<polygon points="'+x+","+y2+" "+r1(x-4.5)+","+r1(y2-9)+" "+r1(x+4.5)+","+r1(y2-9)+'" class="mSAT"/>'}
+  });
+  var rt=PH+G;
+  function RY(v){return r1(rt+(100-v)/100*RH)}
+  s+='<line x1="4" x2="'+W+'" y1="'+RY(70)+'" y2="'+RY(70)+'" class="gl"/><line x1="4" x2="'+W+'" y1="'+RY(30)+'" y2="'+RY(30)+'" class="gl"/>'+ln(c.rsi,"rs",RY)+'<text x="4" y="'+(rt+9)+'">RSI</text>';
+  var mt=rt+RH+G,mx=0;
+  for(i=0;i<n;i++)mx=Math.max(mx,Math.abs(c.mh[i]));
+  var z=mt+MH/2;
+  s+='<line x1="4" x2="'+W+'" y1="'+r1(z)+'" y2="'+r1(z)+'" class="gl"/><text x="4" y="'+(mt+9)+'">MACD</text>';
+  for(i=0;i<n;i++){var hh=mx?c.mh[i]/mx*(MH/2-2):0;s+='<rect x="'+r1(X(i)-bw/2)+'" y="'+r1(hh>=0?z-hh:z)+'" width="'+r1(bw)+'" height="'+r1(Math.max(.6,Math.abs(hh)))+'" class="'+(hh>=0?"up":"dn")+'"/>'}
+  var H=mt+MH+TH;
+  s+='<text x="4" y="'+(H-3)+'">'+tm(c.t0)+'</text><text x="'+(W-2)+'" y="'+(H-3)+'" text-anchor="end">'+tm(c.t1)+'</text>';
+  return '<svg viewBox="0 0 '+W+" "+H+'">'+s+'</svg>'+
+  '<div class="legend"><span style="color:#f59e0b">━ EMA20</span> · <span style="color:#3b82f6">━ EMA50</span> · gri bant: Bollinger · <span style="color:var(--ok)">▲ AL</span> · <span style="color:var(--bad)">▼ SAT</span> (1 saatlik skor; ▲▼ sinyalin değiştiği mum)</div>';
+}
+function coinBody(t,d){
+  var h='<div class="votes">';
+  Object.keys(t.votes).forEach(function(k){var v=t.votes[k];h+=chip(k+" "+(v>0?"+1":v<0?"−1":"0"),v>0?"ok":v<0?"bad":"")});
+  h+='</div><div class="mu">Rejim: <b>'+esc(t.regime)+'</b> (ADX '+t.adx+') · RSI '+t.rsi+' · 4 saatlik trend: '+esc(t.trend4)+' · skor '+(t.score>0?"+":"")+t.score+'</div>';
+  if(t.note)h+='<div class="mu">'+esc(t.note)+'</div>';
+  if(t.raw==="AL")h+='<div class="grid"><div><small>Giriş</small><b>'+fm(t.price)+'</b></div><div><small>Stop</small><b>'+fm(t.stop)+'</b></div><div><small>Hedef</small><b>'+fm(t.target)+'</b></div></div>';
+  var a=t.stats.al,s=t.stats.sat;
+  h+='<div class="mu" style="margin-top:6px">Son ~'+t.stats.days+' gün (bu coin, '+6+' saat sonrası): AL sinyali '+a.n+' kez'+(a.n?', %'+a.hit+'’i artıda, ort. '+(a.avg>0?"+":"")+a.avg+'%':'')+'. SAT sinyali '+s.n+' kez'+(s.n?', %'+s.hit+'’i düşüşte, ort. '+(s.avg>0?"+":"")+s.avg+'%':'')+'. Küçük örneklem, kesin kanıt sayılmaz.</div>';
+  var lv=[];
+  (d.history||[]).forEach(function(x){if(x.symbol===t.sym&&(x.status==="BEKLİYOR"||x.status==="AÇIK")){
+    lv.push({v:x.entry,t:"giriş",col:"#3b82f6"},{v:x.stop,t:"stop",col:"#ef4444"},{v:x.target,t:"hedef",col:"#22c55e"})}});
+  return h+chart(t.chart,lv);
 }
 fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(function(d){
   var age=Date.now()-new Date(d.updated).getTime();
@@ -59,8 +136,14 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   if(d.error)h+='<div class="banner">Son turda hata: '+esc(d.error)+'</div>';
   if(d.btc)h+='<div class="card row"><span>BTC (4 saat)</span>'+chip((d.btc.c4>=0?"+":"")+d.btc.c4+"%"+(d.btc.weak?" zayıf":""),d.btc.weak?"bad":"ok")+'</div>';
   var act=(d.history||[]).filter(function(x){return x.status==="BEKLİYOR"||x.status==="AÇIK"});
-  h+="<h2>Aktif öneriler</h2>"+(act.length?act.map(sigCard).join(""):'<div class="card mu">Şu an aktif öneri yok.</div>');
-  h+="<h2>Son tur</h2>";
+  h+="<h2>Aktif öneriler</h2>"+(act.length?act.map(function(x){return sigCard(x,d.now)}).join(""):'<div class="card mu">Şu an aktif öneri yok.</div>');
+  var w=d.watch||[];
+  h+="<h2>Teknik analiz (hacme göre ilk "+w.length+" coin)</h2><div class='mu' style='margin-bottom:8px'>Bir coine dokun: grafik, gösterge oyları ve o coinin geçmiş sinyal istatistiği açılır. SAT = elinde varsa çıkmayı düşün, yoksa alma.</div>";
+  w.forEach(function(t,i){
+    h+='<details class="card coin" data-i="'+i+'"><summary><div class="row"><span><span class="sym">'+esc(t.sym.replace(/USDT$/,""))+'</span> <span class="mu">'+fm(t.price)+'</span></span>'+chip(t.signal,SGC[t.signal])+'</div>'+
+    '<div class="mu">skor '+(t.score>0?"+":"")+t.score+' · '+esc(t.regime)+' · 4s '+esc(t.trend4)+(t.note?' · '+esc(t.note):'')+'</div></summary><div class="cb"></div></details>';
+  });
+  h+="<h2>Hacim taraması (son tur)</h2>";
   if(!d.picks||!d.picks.length)h+='<div class="card mu">'+esc(d.lead||"Olağandışı hareket yok.")+'</div>';
   else d.picks.forEach(function(p){
     var dc=p.decision==="AL"?"ok":(p.decision==="BEKLE"?"wt":"bad");
@@ -71,11 +154,24 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
     (p.note?'<div class="mu">'+esc(p.note)+'</div>':'')+'</div>';
   });
   var s=d.stats||{wins:0,losses:0,r:0};
-  h+="<h2>Geçmiş</h2><div class='stats'><div class='card'><b>"+s.wins+"</b><span class='mu'>hedef</span></div><div class='card'><b>"+s.losses+"</b><span class='mu'>stop</span></div><div class='card'><b>"+(s.r>0?"+":"")+s.r+"R</b><span class='mu'>net</span></div></div><div style='height:10px'></div>";
-  var old=(d.history||[]);
-  h+=old.length?old.map(sigCard).join(""):'<div class="card mu">Henüz öneri yok. Çoğu tur sessiz geçer.</div>';
+  h+="<h2>Geçmiş öneriler</h2><div class='stats'><div class='card'><b>"+s.wins+"</b><span class='mu'>hedef</span></div><div class='card'><b>"+s.losses+"</b><span class='mu'>stop</span></div><div class='card'><b>"+(s.r>0?"+":"")+s.r+"R</b><span class='mu'>net</span></div></div><div style='height:10px'></div>";
+  var old=d.history||[];
+  h+=old.length?old.map(function(x){return sigCard(x,null)}).join(""):'<div class="card mu">Henüz öneri yok. Çoğu tur sessiz geçer.</div>';
+  h+='<h2>Algoritma</h2><details class="card alg"><summary>Nasıl çalışıyor?</summary><ul>'+
+  '<li><b>Rejim:</b> ADX 25 ve üstündeyse piyasa “trend”, altındaysa “yatay” sayılır. Her rejimde farklı göstergeler oy verir.</li>'+
+  '<li><b>Trend rejimi:</b> EMA20/50 yönü, MACD histogramı, 20 mumluk Donchian kırılımı ve OBV (hacim akışı) oy verir. 4 oydan en az 3’ü aynı yöndeyse AL ya da SAT.</li>'+
+  '<li><b>Yatay rejim:</b> RSI (30 altı/70 üstü), Bollinger bandı dışına çıkış ve OBV oy verir. En az biri aşırı bölgede ve toplam skor ±2 ise AL ya da SAT.</li>'+
+  '<li><b>Filtreler:</b> 4 saatlik trend aşağıysa ya da BTC zayıfsa (4 saatte %2’den fazla düşüş) AL, BEKLE’ye çevrilir.</li>'+
+  '<li><b>Hacim taraması:</b> Son saatin hacmi önceki 24 saatin 2 katını aşan ve yükselen coinler aday olur. Haber, risk ve şüpheci (teknik SAT dahil) kontrolünden geçerse öneri çıkar.</li>'+
+  '<li><b>Seviyeler:</b> Stop = giriş − 1,5×ATR, hedef = riskin 2 katı. Miktar: hesabın %0,5’i risk, tek coine en fazla %10.</li>'+
+  '<li><b>Dürüst not:</b> Bunlar yaygın klasik göstergelerdir, kâr garantisi vermez. Asıl ölçüt yukarıdaki “Geçmiş öneriler” sonuçlarıdır.</li></ul></details>';
   document.getElementById("app").innerHTML=h;
-}).catch(function(){
+  Array.prototype.forEach.call(document.querySelectorAll("details.coin"),function(el){
+    el.addEventListener("toggle",function(){
+      if(el.open&&!el.dataset.done){el.dataset.done=1;el.querySelector(".cb").innerHTML=coinBody(w[+el.dataset.i],d)}
+    });
+  });
+}).catch(function(e){
   document.getElementById("upd").textContent="";
   document.getElementById("app").innerHTML='<div class="banner">Veri yüklenemedi. İlk çalıştırma henüz bitmemiş olabilir; birkaç dakika sonra yenile.</div>';
 });
