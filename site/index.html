@@ -43,6 +43,7 @@ svg .e20{stroke:#f59e0b;stroke-width:1.4}svg .e50{stroke:#3b82f6;stroke-width:1.
 svg .rs{stroke:#a855f7;stroke-width:1.2}
 svg .gl{stroke:var(--mu);stroke-dasharray:3 3;opacity:.6;stroke-width:.7}
 svg .lvl{stroke-dasharray:4 3;stroke-width:1}
+svg .eq{stroke:#3b82f6;stroke-width:1.6}svg .bh{stroke:var(--mu);stroke-width:1.2;stroke-dasharray:3 2}
 svg .mAL{fill:var(--ok)}svg .mSAT{fill:var(--bad)}
 svg text{fill:var(--mu);font-size:9px}
 svg .tagU{fill:var(--ok);stroke:none}svg .tagD{fill:var(--bad);stroke:none}svg text.tt{fill:#fff}
@@ -67,7 +68,7 @@ function ago(ms){var m=Math.round(ms/60000);if(m<1)return "az önce";if(m<60)ret
 function tm(iso){return new Date(iso).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
 function chip(t,c){return '<span class="chip '+(c||"")+'">'+esc(t)+'</span>'}
 var STC={"HEDEF":"ok","STOP":"bad","AÇIK":"wt","BEKLİYOR":"wt"};
-var SGC={"AL":"ok","SAT":"bad","BEKLE":""};
+var SGC={"AL":"ok","ZAYIF":"wt","SAT":"bad","BEKLE":""};
 function sigCard(h,now){
   var tc=now&&now[h.symbol]?chip("Teknik: "+now[h.symbol],SGC[now[h.symbol]]):"";
   return '<div class="card"><div class="row"><span class="sym">'+esc(h.symbol)+'</span><span>'+tc+" "+chip(h.status,STC[h.status])+'</span></div>'+
@@ -122,6 +123,22 @@ function chart(c,lv){
   return '<svg viewBox="0 0 '+W+" "+H+'">'+s+'</svg>'+
   '<div class="legend">Son kapanış <b>'+fm(c.c[L])+'</b> · <span style="color:#f59e0b">━ EMA20 '+fm(c.e20[L])+'</span> · <span style="color:#3b82f6">━ EMA50 '+fm(c.e50[L])+'</span> · Bollinger alt/üst '+fm(c.bl[L])+' / '+fm(c.bu[L])+' · <span style="color:var(--ok)">▲ AL</span> <span style="color:var(--bad)">▼ SAT</span> (1 saatlik skorun değiştiği mum)</div>';
 }
+function btChart(b){
+  var W=372,H=110,AX=50,Wp=W-AX,pad=8,n=b.curve.length;
+  var all=b.curve.concat(b.bhc,[0]),lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),rg=(hi-lo)||1;
+  function X(i){return r1(4+(Wp-8)*i/Math.max(1,n-1))}
+  function Y(v){return r1(pad+(hi-v)/rg*(H-2*pad))}
+  function pl(a,cl){var d="";for(var i=0;i<a.length;i++)d+=(i?"L":"M")+X(i)+","+Y(a[i]);return '<path d="'+d+'" class="'+cl+'"/>'}
+  function sg(v){return (v>0?"+":"")+v+"%"}
+  var s='<line x1="4" x2="'+Wp+'" y1="'+Y(0)+'" y2="'+Y(0)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+(Y(0)+3)+'">0%</text>'+pl(b.bhc,"bh")+pl(b.curve,"eq");
+  s+='<text x="'+(Wp+4)+'" y="'+(Y(b.curve[n-1])-2)+'" style="fill:#3b82f6">'+sg(b.curve[n-1])+'</text><text x="'+(Wp+4)+'" y="'+(Y(b.bhc[n-1])+9)+'">'+sg(b.bhc[n-1])+'</text>';
+  return '<svg viewBox="0 0 '+W+" "+H+'">'+s+'</svg>';
+}
+function btText(b){
+  if(!b.n)return '<div class="mu">Son ~'+b.days+' günde bu stratejide hiç AL sinyali oluşmadı, backtest yapılamadı.</div>';
+  return '<div class="mu"><b>Backtest</b> (son ~'+b.days+' gün, komisyon yön başına %0,1 dahil): '+b.n+' işlem, %'+b.win+' kazanma, hesap getirisi <b>'+(b.ret>0?"+":"")+b.ret+'%</b>, en büyük düşüş %'+b.dd+(b.pf!=null?', kâr faktörü '+b.pf:'')+'.</div>'+
+  '<div class="legend"><span style="color:#3b82f6">━ strateji</span> · <span>┅ aynı %10 pozisyonla al-tut ('+(b.bh>0?"+":"")+b.bh+'%)</span> · giriş: sinyalden sonraki mum açılışı; stop ve hedef aynı mumdaysa stop; en fazla 48 saat</div>'+btChart(b);
+}
 function coinBody(t,d){
   var h='<div class="votes">';
   Object.keys(t.votes).forEach(function(k){var v=t.votes[k];h+=chip(k+" "+(v>0?"+1":v<0?"−1":"0"),v>0?"ok":v<0?"bad":"")});
@@ -133,7 +150,7 @@ function coinBody(t,d){
   var lv=[];
   (d.history||[]).forEach(function(x){if(x.symbol===t.sym&&(x.status==="BEKLİYOR"||x.status==="AÇIK")){
     lv.push({v:x.entry,t:"giriş",col:"#3b82f6"},{v:x.stop,t:"stop",col:"#ef4444"},{v:x.target,t:"hedef",col:"#22c55e"})}});
-  return h+chart(t.chart,lv);
+  return h+chart(t.chart,lv)+(t.bt?btText(t.bt):'');
 }
 fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(function(d){
   var age=Date.now()-new Date(d.updated).getTime();
@@ -142,6 +159,11 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   if(age>100*60000)h+='<div class="banner">Güncelleme gecikti ('+ago(age)+'). GitHub Actions sekmesinden çalışmayı kontrol et.</div>';
   if(d.error)h+='<div class="banner">Son turda hata: '+esc(d.error)+'</div>';
   if(d.btc)h+='<div class="card row"><span>BTC (4 saat)</span>'+chip((d.btc.c4>=0?"+":"")+d.btc.c4+"%"+(d.btc.weak?" zayıf":""),d.btc.weak?"bad":"ok")+'</div>';
+  var sn=d.sentiment;
+  if(sn){var fg=sn.fng!=null?sn.fng+" ("+esc(sn.fng_label)+")":"yok",fu=sn.funding!=null?"%"+sn.funding:"yok",dm=sn.dominance!=null?"%"+sn.dominance:"yok";
+    h+='<div class="card"><div class="mu">Korku/Açgözlülük: <b>'+fg+'</b> · BTC fonlama oranı: <b>'+fu+'</b> · BTC dominansı: <b>'+dm+'</b></div></div>';}
+  if(d.risk_ctx)h+='<div class="card mu">Açık risk: <b>%'+d.risk_ctx.open_pct+'</b> / %'+d.risk_ctx.limit_pct+' (hesap) · son 24 saat: <b>'+(d.risk_ctx.day_r>0?"+":"")+d.risk_ctx.day_r+'R</b></div>';
+  if(d.alerts&&d.alerts.length){h+='<h2>Fiyat alarmları</h2>';d.alerts.forEach(function(a){h+='<div class="card row"><span><b>'+esc(a.sym.replace(/USDT$/,""))+'</b> '+esc(a.op)+' '+fm(a.val)+' <span class="mu">(şimdi '+fm(a.price)+')</span></span>'+chip(a.hit?"tetiklendi":"bekliyor",a.hit?"ok":"")+'</div>'})}
   var act=(d.history||[]).filter(function(x){return x.status==="BEKLİYOR"||x.status==="AÇIK"});
   h+="<h2>Aktif öneriler</h2>"+(act.length?act.map(function(x){return sigCard(x,d.now)}).join(""):'<div class="card mu">Şu an aktif öneri yok.</div>');
   var w=d.watch||[];
@@ -169,8 +191,11 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   '<li><b>Rejim:</b> ADX 25 ve üstündeyse piyasa “trend”, altındaysa “yatay” sayılır. Her rejimde farklı göstergeler oy verir.</li>'+
   '<li><b>Trend rejimi:</b> EMA20/50 yönü, MACD histogramı, 20 mumluk Donchian kırılımı ve OBV (hacim akışı) oy verir. 4 oydan en az 3’ü aynı yöndeyse AL ya da SAT.</li>'+
   '<li><b>Yatay rejim:</b> RSI (30 altı/70 üstü), Bollinger bandı dışına çıkış ve OBV oy verir. En az biri aşırı bölgede ve toplam skor ±2 ise AL ya da SAT.</li>'+
+  '<li><b>ZAYIF AL:</b> Trend rejiminde 4 oydan 2’si yukarı ve EMA yönü yukarıysa (yatayda RSI 40 altı ve OBV yukarıysa) sarı “ZAYIF” etiketi çıkar. Bildirim göndermez, sadece yukarı eğilimi gösterir.</li>'+
   '<li><b>Filtreler:</b> 4 saatlik trend aşağıysa ya da BTC zayıfsa (4 saatte %2’den fazla düşüş) AL, BEKLE’ye çevrilir.</li>'+
   '<li><b>Hacim taraması:</b> Son saatin hacmi önceki 24 saatin 2 katını aşan ve yükselen coinler aday olur. Haber, risk ve şüpheci (teknik SAT dahil) kontrolünden geçerse öneri çıkar.</li>'+
+  '<li><b>Risk katmanı:</b> Açık önerilerin toplam riski hesabın %1,5’ini aşamaz. Son 24 saatte toplam kayıp 3R’yi geçerse yeni öneri durur.</li>'+
+  '<li><b>Duyarlılık:</b> Korku/Açgözlülük 80 ve üstü ya da BTC fonlama oranı %0,05 üstü olursa şüpheci bot itiraz eder. Veriye ulaşılamazsa “yok” yazar ve atlanır.</li>'+
   '<li><b>Seviyeler:</b> Stop = giriş − 1,5×ATR, hedef = riskin 2 katı. Miktar: hesabın %0,5’i risk, tek coine en fazla %10.</li>'+
   '<li><b>Dürüst not:</b> Bunlar yaygın klasik göstergelerdir, kâr garantisi vermez. Asıl ölçüt yukarıdaki “Geçmiş öneriler” sonuçlarıdır.</li></ul></details>';
   document.getElementById("app").innerHTML=h;
