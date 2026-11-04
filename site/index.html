@@ -16,7 +16,7 @@ main{max-width:1120px;margin:auto}.bar{display:flex;align-items:center;justify-c
 
 /* MarketPulse directional atmosphere */
 body{position:relative;isolation:isolate;background:linear-gradient(180deg,#10251b 0%,#101713 43%,#211714 100%)}
-body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(125,205,91,.13) 0%,transparent 42%,rgba(220,75,65,.16) 100%);opacity:var(--scroll-atmosphere,.85);transition:opacity .25s}
+body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(135deg,rgba(125,205,91,var(--scroll-green,.16)),rgba(220,75,65,var(--scroll-red,.02)));transition:background .18s ease}.shell{position:relative;z-index:1}
 
 </style>
 </head>
@@ -31,4 +31,6 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 <div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon">◈</div><span class="tag soon">YAKINDA</span></div><h3>Commodities Desk</h3><p>Altın, gümüş, enerji ve diğer emtialar için piyasa izleme ve analiz alanı.</p><div class="enter">Henüz kullanıma açık değil</div></div>
 </section>
 <footer class="foot">MarketPulse Desk · Analiz ve karar destek platformu. İçerikler yatırım tavsiyesi değildir.</footer>
-</main></body></html>
+</main><script>
+(function(){var root=document.documentElement,raf=false;function paint(){var max=Math.max(1,document.documentElement.scrollHeight-innerHeight),p=Math.min(1,Math.max(0,scrollY/max));root.style.setProperty('--scroll-green',(0.18*(1-p)+0.015).toFixed(3));root.style.setProperty('--scroll-red',(0.19*p+0.012).toFixed(3));raf=false}addEventListener('scroll',function(){if(!raf){raf=true;requestAnimationFrame(paint)}},{passive:true});addEventListener('resize',paint);paint()})();
+</script></body></html>
