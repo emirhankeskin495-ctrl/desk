@@ -1,0 +1,6 @@
+Apache License 2.0
+
+This skill is adapted from Anthropic's frontend-design skill, https://github.com/anthropics/skills/tree/main/skills/frontend-design.
+Copyright 2025 Anthropic. Licensed under the Apache License, Version 2.0. You may obtain a copy of the License at https://www.apache.org/licenses/LICENSE-2.0.
+
+This repository copy includes a project-specific adaptation. The complete Apache-2.0 license text is available at https://www.apache.org/licenses/LICENSE-2.0.
