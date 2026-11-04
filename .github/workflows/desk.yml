@@ -1,7 +1,7 @@
 name: crypto-desk
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "7,37 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -22,6 +22,8 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -31,11 +33,16 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           ACCOUNT_USDT: ${{ secrets.ACCOUNT_USDT }}
       - name: Kaydet
+        continue-on-error: true
         run: |
           git config user.name "desk-bot"
           git config user.email "desk-bot@users.noreply.github.com"
           git add cooldown.json history.json 2>/dev/null || true
-          git diff --cached --quiet || (git commit -m "signals" && git push)
+          if ! git diff --cached --quiet; then
+            git commit -m "signals"
+            git pull --rebase origin main || git rebase --abort
+            git push || echo "push basarisiz, bu tur durum kaydedilmedi"
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
