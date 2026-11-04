@@ -39,6 +39,7 @@ CHART_N = 96              # Grafikte gösterilecek mum sayısı (1s)
 MAX_TOTAL_RISK_PCT = 1.5  # Açık önerilerin toplam riski hesabın en fazla bu %'si olabilir
 DAILY_LOSS_R = 3.0        # Son 24 saatte toplam kayıp bu kadar R'yi geçerse yeni öneri durur
 FEE_PCT = 0.1             # Backtest: her işlem yönü için komisyon (%)
+WATCH_COOLDOWN_H = 0      # Takip listesi: aynı coin için aynı yönde tekrar bildirim bekleme süresi (saat)
 MIN_NOTIONAL = 5.0        # Bundan küçük pozisyonlar atlanır (Binance min ~5 USDT)
 
 HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"]
@@ -831,12 +832,16 @@ def _round(snap, hist):
         if not t:
             continue
         prev = wst.get(s_)
-        if prev is not None and prev != t["signal"] and t["signal"] in ("AL", "SAT"):
+        wl = cd0.setdefault("_wlast", {})
+        wkey = f"{s_}:{t['signal']}"
+        if (prev is not None and prev != t["signal"] and t["signal"] in ("AL", "SAT")
+                and time.time() - wl.get(wkey, 0) >= WATCH_COOLDOWN_H * 3600):
             extra = (f" Stop {fmt(t['stop'])}, hedef {fmt(t['target'])}." if t["signal"] == "AL"
                      else " Elinde varsa cikisi dusun, yoksa alma.")
             notify(f"Takip: {s_[:-4]} {t['signal']}",
                    f"{s_}: teknik sinyal {prev} -> {t['signal']} (rejim {t['regime']}, "
                    f"skor {t['score']}, fiyat {fmt(t['price'])}).{extra}")
+            wl[wkey] = time.time()
         wst[s_] = t["signal"]
     cd0["_watch"] = wst
     save_cd(cd0)
