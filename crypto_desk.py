@@ -35,6 +35,12 @@ REQUIRE_NEWS = False      # True yapınca haber (HARD/SOFT) olmadan hiç öneri 
 WATCH_N = 12             # Teknik analiz tablosunda kaç coin izlensin (hacme göre)
 ADX_TREND = 25            # ADX bunun üstündeyse piyasa "trend", altındaysa "yatay" sayılır
 FWD_H = 6                 # Geçmiş sinyal istatistiği: sinyalden kaç saat sonrasına bakılsın
+ADAPTIVE = True           # True: ağırlık profili her coin için geçmişten seçilir; False: hep statik "dengeli" profil
+SLIP_PCT = 0.05           # Backtest: her işlem yönü için kayma (%)
+VOL_HIGH = 1.8            # ATR% son 100 mum medyanının bu katını aşarsa "VOLATİL" rejim
+VOL_RISK_MULT = 0.5       # VOLATİL rejimde pozisyon riski çarpanı
+WF_TRAIN = 360            # Walk-forward: ağırlık seçimi için kullanılan geçmiş mum sayısı
+WF_TEST = 120             # Walk-forward: seçilen ağırlıkların denendiği görülmemiş mum sayısı
 TIMEFRAME = os.environ.get("TIMEFRAME", "1h")  # Sinyal zaman dilimi: "1h" (sakin) ya da "15m" (sık sinyal, daha çok gürültü ve komisyon)
 CHART_N = 96              # Grafikte gösterilecek mum sayısı (1s)
 MAX_TOTAL_RISK_PCT = 1.5  # Açık önerilerin toplam riski hesabın en fazla bu %'si olabilir
@@ -43,10 +49,10 @@ FEE_PCT = 0.1             # Backtest: her işlem yönü için komisyon (%)
 WATCH_COOLDOWN_H = 0      # Takip listesi: aynı coin için aynı yönde tekrar bildirim bekleme süresi (saat)
 MIN_NOTIONAL = 5.0        # Bundan küçük pozisyonlar atlanır (Binance min ~5 USDT)
 
-_TF = {"1h": (60, "4h", "1 saatlik", "4 saatlik"), "15m": (15, "1h", "15 dakikalık", "1 saatlik")}
+_TF = {"1h": (60, "4h", "1 saatlik", "4 saatlik", 240), "15m": (15, "1h", "15 dakikalık", "1 saatlik", 60)}
 if TIMEFRAME not in _TF:
     TIMEFRAME = "1h"
-TF_MIN, HTF, TF_LABEL, HTF_LABEL = _TF[TIMEFRAME]   # ana mum süresi, üst zaman dilimi (trend filtresi)
+TF_MIN, HTF, TF_LABEL, HTF_LABEL, HTF_MIN = _TF[TIMEFRAME]   # ana mum süresi, üst zaman dilimi (trend filtresi)
 
 HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"]
 NEWS_FEEDS = [
@@ -255,6 +261,21 @@ def adx_series(k, n=14):
     return adx
 
 
+def atr_series(k, n=14):
+    L = len(k)
+    out = [0.0] * L
+    if L < n + 2:
+        return out
+    trs = [0.0] + [max(k[i]["h"] - k[i]["l"], abs(k[i]["h"] - k[i - 1]["c"]),
+                       abs(k[i]["l"] - k[i - 1]["c"])) for i in range(1, L)]
+    a = sum(trs[1:n + 1]) / n
+    out[n] = a
+    for i in range(n + 1, L):
+        a = (a * (n - 1) + trs[i]) / n
+        out[i] = a
+    return out
+
+
 def build_series(k):
     c = [x["c"] for x in k]
     macd = [a - b for a, b in zip(ema_series(c, 12), ema_series(c, 26))]
@@ -265,11 +286,18 @@ def build_series(k):
         obv.append(obv[-1] + (k[i]["v"] if c[i] > c[i - 1] else -k[i]["v"] if c[i] < c[i - 1] else 0))
     return dict(c=c, h=[x["h"] for x in k], l=[x["l"] for x in k],
                 e20=ema_series(c, 20), e50=ema_series(c, 50), rsi=rsi_series(c),
-                mh=mh, bu=bu, bl=bl, adx=adx_series(k), obv=obv, obvE=ema_series(obv, 20))
+                mh=mh, bu=bu, bl=bl, adx=adx_series(k), obv=obv, obvE=ema_series(obv, 20),
+                atr=atr_series(k), v=[x["v"] for x in k])
 
 
-def score_at(j, S):
-    """Rejime duyarlı bileşik skor: ADX yüksekse trend göstergeleri, düşükse dönüş göstergeleri oy verir."""
+# ======================================================================
+#  SİNYAL ÜRETİMİ: saf fonksiyonlar. Bir mum için sadece o muma kadar olan veriyi kullanır.
+# ======================================================================
+FSTART = 120   # göstergelerin ve volatilite tabanının oturduğu ilk mum
+
+
+def features(j, S):
+    """j. mumun kapanışında bilinen her şey: gösterge oyları, hacim teyidi, volatilite ve rejim."""
     c = S["c"][j]
     ema_v = 1 if (S["e20"][j] > S["e50"][j] and c > S["e50"][j]) else \
         (-1 if (S["e20"][j] < S["e50"][j] and c < S["e50"][j]) else 0)
@@ -281,27 +309,81 @@ def score_at(j, S):
     r = S["rsi"][j]
     rsi_v = 1 if r < 30 else (-1 if r > 70 else 0)
     bb_v = 1 if c < S["bl"][j] else (-1 if c > S["bu"][j] else 0)
-    if S["adx"][j] >= ADX_TREND:
-        regime = "TREND"
-        v = {"EMA 20/50": ema_v, "MACD": macd_v, "Donchian": don_v, "OBV": obv_v}
-        sc = sum(v.values())
-        sig = "AL" if sc >= 3 else ("SAT" if sc <= -3 else
-                                    ("ZAYIF" if (sc == 2 and ema_v == 1) else "BEKLE"))
-    else:
-        regime = "YATAY"
-        v = {"RSI": rsi_v, "Bollinger": bb_v, "OBV": obv_v}
-        sc = sum(v.values())
-        if sc >= 2 and (rsi_v == 1 or bb_v == 1):
-            sig = "AL"
-        elif sc <= -2 and (rsi_v == -1 or bb_v == -1):
-            sig = "SAT"
-        elif r < 40 and obv_v == 1:
-            sig = "ZAYIF"
-        else:
-            sig = "BEKLE"
-    return sc, sig, regime, v
+    vols = S["v"][j - 20:j]
+    vol_ok = S["v"][j] >= sum(vols) / len(vols)
+    base = sorted(S["atr"][q] / S["c"][q] for q in range(j - 100, j))[50]
+    vr = (S["atr"][j] / c) / base if base else 1.0
+    adx = S["adx"][j]
+    regime = "VOLATİL" if vr >= VOL_HIGH else ("TREND" if adx >= ADX_TREND else "YATAY")
+    return dict(ema=ema_v, macd=macd_v, don=don_v, obv=obv_v, rsi=rsi_v, bb=bb_v, vol_ok=vol_ok,
+                vr=vr, adx=adx, regime=regime, rsi_val=r)
 
 
+# Ağırlık profilleri: sırayla (ema, macd, donchian, obv) ve (rsi, bollinger, obv)
+TREND_PRE = {"dengeli": (1, 1, 1, 1), "ema_odak": (2, 1, 1, 1),
+             "macd_odak": (1, 2, 1, 1), "kirilim_odak": (1, 1, 2, 1)}
+RANGE_PRE = {"dengeli": (1, 1, 1), "rsi_odak": (2, 1, 1), "bb_odak": (1, 2, 1)}
+TREND_NAMES = ("EMA 20/50", "MACD", "Donchian", "OBV")
+RANGE_NAMES = ("RSI", "Bollinger", "OBV")
+THR = {"TREND": 0.7, "YATAY": 0.6, "VOLATİL": 0.8}   # AL/SAT eşiği (VOLATİL rejimde daha sıkı)
+THR_WEAK = 0.4
+COMBOS = [(tp, rp) for tp in TREND_PRE for rp in RANGE_PRE]
+DEFAULT = ("dengeli", "dengeli")
+
+
+def sig_from(f, tp, rp):
+    """Ağırlıklı skor ve sinyal. Yatay rejimde RSI/Bollinger, trend rejiminde EMA/MACD/Donchian öne çıkar;
+    trend gücü (ADX) trend skorunu büyütür; volatil rejimde eşik yükselir."""
+    reg = f["regime"]
+    if reg == "YATAY":
+        w = RANGE_PRE[rp]
+        s = sum(a * b for a, b in zip(w, (f["rsi"], f["bb"], f["obv"]))) / sum(w)
+        if s >= THR[reg] and (f["rsi"] == 1 or f["bb"] == 1):
+            return s, "AL"
+        if s <= -THR[reg] and (f["rsi"] == -1 or f["bb"] == -1):
+            return s, "SAT"
+        if f["rsi_val"] < 40 and f["obv"] == 1:
+            return s, "ZAYIF"
+        return s, "BEKLE"
+    w = TREND_PRE[tp]
+    s = sum(a * b for a, b in zip(w, (f["ema"], f["macd"], f["don"], f["obv"]))) / sum(w)
+    if reg == "TREND":
+        s *= min(1.3, f["adx"] / ADX_TREND)
+    if s >= THR[reg]:
+        return s, "AL"
+    if s <= -THR[reg]:
+        return s, "SAT"
+    if reg == "TREND" and s >= THR_WEAK and f["ema"] == 1:
+        return s, "ZAYIF"
+    return s, "BEKLE"
+
+
+def trend_of(c):
+    e20, e50 = ema_series(c, 20)[-1], ema_series(c, 50)[-1]
+    return "YUKARI" if (c[-1] > e50 and e20 > e50) else ("AŞAĞI" if (c[-1] < e50 and e20 < e50) else "YATAY")
+
+
+def htf_trends(hk):
+    c = [x["c"] for x in hk]
+    e20, e50 = ema_series(c, 20), ema_series(c, 50)
+    return ["YUKARI" if (c[i] > e50[i] and e20[i] > e50[i]) else
+            ("AŞAĞI" if (c[i] < e50[i] and e20[i] < e50[i]) else "YATAY") for i in range(len(c))]
+
+
+def align_htf(k, hk, htr):
+    """Her mum için, o mum KAPANDIĞI anda tamamlanmış olan son üst zaman dilimi mumunun trendi (geleceğe bakma yok)."""
+    out, h = [], -1
+    for j in range(len(k)):
+        close_t = k[j]["t"] + TF_MIN * 60000
+        while h + 1 < len(hk) and hk[h + 1]["t"] + HTF_MIN * 60000 <= close_t:
+            h += 1
+        out.append(htr[h] if h >= 0 else "YATAY")
+    return out
+
+
+# ======================================================================
+#  DEĞERLENDİRME: sinyal üretiminden ayrı. Komisyon + kayma dahil, pencere dışına bakmaz.
+# ======================================================================
 def _stat(flips, kind, c):
     fwd = FWD_H * 60 // TF_MIN
     xs = [c[j + fwd] / c[j] - 1 for j, t in flips if t == kind and j + fwd < len(c)]
@@ -312,99 +394,251 @@ def _stat(flips, kind, c):
             "avg": round(100 * sum(xs) / len(xs), 2)}
 
 
-def backtest(k, S, res):
-    """Stratejiyi geçmişte oynatır: AL'a dönüşte sonraki mumun açılışından girer, stop/hedef/SAT/48 saat ile çıkar."""
-    L = len(k)
-    fee = FEE_PCT / 100
-    eq, ev, trades, busy = 1.0, {}, [], -1
-    for j in range(61, L - 1):
-        if j <= busy or res[j][1] != "AL" or res[j - 1][1] == "AL":
+def simulate(k, S, F, fs, a, b):
+    """fs: nihai sinyal listesi. Sadece [a, b) penceresinde işlem açar ve pencere dışındaki mumlara bakmaz.
+    Giriş: sinyalin ertesi mumunun açılışı (+kayma). Çıkış: stop (kayma ile), hedef, SAT sinyali ya da 48 mum."""
+    fee, slip = FEE_PCT / 100, SLIP_PCT / 100
+    trades, busy = [], a - 1
+    for j in range(max(a, FSTART + 1), b - 1):
+        if j <= busy or fs[j] != "AL" or fs[j - 1] == "AL":
             continue
-        a = atr(k[max(0, j - 60):j + 1])
-        entry = k[j + 1]["o"]
-        stop = entry - ATR_MULT * a
+        entry = k[j + 1]["o"] * (1 + slip)
+        stop = entry - ATR_MULT * S["atr"][j]
         if stop <= 0 or entry <= stop:
             continue
         target = entry + RR_TARGET * (entry - stop)
+        last = min(b - 1, j + 48)
         xp = xi = None
-        for m in range(j + 1, min(L, j + 49)):
+        for m in range(j + 1, last + 1):
             if k[m]["l"] <= stop:
-                xp, xi = stop, m
+                xp, xi = stop * (1 - slip), m
                 break
             if k[m]["h"] >= target:
                 xp, xi = target, m
                 break
-            if res[m] and res[m][1] == "SAT":
-                xp, xi = k[m]["c"], m
+            if fs[m] == "SAT":
+                xp, xi = k[m]["c"] * (1 - slip), m
                 break
         if xp is None:
-            xi = min(L - 1, j + 48)
-            xp = k[xi]["c"]
+            xi = last
+            xp = k[last]["c"] * (1 - slip)
         net = xp / entry - 1 - 2 * fee
         frac = min(RISK_PCT / 100 / ((entry - stop) / entry), MAX_POS_PCT / 100)
-        eq *= 1 + frac * net
-        trades.append(frac * net)
-        ev[xi] = eq
+        if F[j]["regime"] == "VOLATİL":
+            frac *= VOL_RISK_MULT
+        trades.append(dict(j=j, xi=xi, net=net, pe=frac * net, reg=F[j]["regime"]))
         busy = xi
-    cur, curve = 1.0, []
-    for q in range(60, L):
+    return trades
+
+
+def metrics(trades):
+    n = len(trades)
+    if not n:
+        return dict(n=0, win=0, avg=0.0, ret=0.0, pf=None)
+    eq = 1.0
+    for t in trades:
+        eq *= 1 + t["pe"]
+    gp = sum(t["pe"] for t in trades if t["pe"] > 0)
+    gl = -sum(t["pe"] for t in trades if t["pe"] < 0)
+    return dict(n=n, win=round(100 * sum(1 for t in trades if t["net"] > 0) / n),
+                avg=round(100 * sum(t["net"] for t in trades) / n, 2),
+                ret=round(100 * (eq - 1), 2), pf=round(gp / gl, 2) if gl else None)
+
+
+def curve_from(trades, a, b):
+    eq, ev = 1.0, {}
+    for t in trades:
+        eq *= 1 + t["pe"]
+        ev[t["xi"]] = eq
+    cur, out = 1.0, []
+    for q in range(a, b):
         cur = ev.get(q, cur)
-        curve.append(cur)
-    c0 = S["c"][60]
-    hold = [1 + MAX_POS_PCT / 100 * (S["c"][q] / c0 - 1) for q in range(60, L)]
+        out.append(cur)
+    return out
+
+
+def _idx(n, m=80):
+    step = max(1, n // m)
+    idx = list(range(0, n, step))
+    if idx[-1] != n - 1:
+        idx.append(n - 1)
+    return idx
+
+
+def bt_from(trades, S, a, L):
+    """Tüm dönem backtest (doğrulama değil, iyimser): eğitim ve test ayrımı yok."""
+    curve = curve_from(trades, a, L)
+    c0 = S["c"][a]
+    hold = [1 + MAX_POS_PCT / 100 * (S["c"][q] / c0 - 1) for q in range(a, L)]
     peak, dd = 1.0, 0.0
     for x in curve:
         peak = max(peak, x)
         dd = max(dd, 1 - x / peak)
-    gp = sum(x for x in trades if x > 0)
-    gl = -sum(x for x in trades if x < 0)
-    step = max(1, len(curve) // 80)
-    idx = list(range(0, len(curve), step))
-    if idx[-1] != len(curve) - 1:
-        idx.append(len(curve) - 1)
-    return dict(n=len(trades), win=round(100 * sum(1 for x in trades if x > 0) / len(trades)) if trades else 0,
-                ret=round(100 * (eq - 1), 2), bh=round(100 * (hold[-1] - 1), 2), dd=round(100 * dd, 2),
-                pf=round(gp / gl, 2) if gl else None, days=round((L - 60) * TF_MIN / 1440),
+    m = metrics(trades)
+    idx = _idx(len(curve))
+    return dict(n=m["n"], win=m["win"], ret=m["ret"], bh=round(100 * (hold[-1] - 1), 2),
+                dd=round(100 * dd, 2), pf=m["pf"], days=round((L - a) * TF_MIN / 1440),
                 hold_h=round(48 * TF_MIN / 60),
                 curve=[round(100 * (curve[q] - 1), 2) for q in idx],
                 bhc=[round(100 * (hold[q] - 1), 2) for q in idx])
 
 
+def fit(k, S, F, fin, a, b):
+    """[a, b) penceresinde en iyi ağırlık profilini seçer (işlem başına ortalama net getiri, en az 4 işlem)."""
+    best, bs = DEFAULT, None
+    for cb in COMBOS:
+        tr = simulate(k, S, F, fin[cb], a, b)
+        if len(tr) < 4:
+            continue
+        sc = sum(t["net"] for t in tr) / len(tr)
+        if bs is None or sc > bs:
+            best, bs = cb, sc
+    return best, bs
+
+
+def walk_forward(k, S, F, fin, L):
+    """Her pencerede ağırlıkları SADECE geçmiş WF_TRAIN mumdan seç, sonraki WF_TEST mumda dene (görülmemiş veri).
+    Aynı test pencerelerinde statik (dengeli) profille kıyaslar."""
+    s0, ad, st, iss, nf, first, last = FSTART + 1, [], [], [], 0, None, None
+    while s0 + WF_TRAIN + WF_TEST <= L - 1:
+        tr_b = s0 + WF_TRAIN
+        te_a, te_b = tr_b, tr_b + WF_TEST
+        cb, sc = fit(k, S, F, fin, s0, tr_b)
+        ad += simulate(k, S, F, fin[cb], te_a, te_b)
+        st += simulate(k, S, F, fin[DEFAULT], te_a, te_b)
+        if sc is not None:
+            iss.append(sc)
+        nf += 1
+        first = te_a if first is None else first
+        last = te_b
+        s0 += WF_TEST
+    if nf < 2:
+        return None
+    ca, cs = curve_from(ad, first, last), curve_from(st, first, last)
+    idx = _idx(len(ca))
+    return dict(folds=nf, train=WF_TRAIN, test=WF_TEST, days=round((last - first) * TF_MIN / 1440, 1),
+                ad=metrics(ad), st=metrics(st),
+                is_avg=round(100 * sum(iss) / len(iss), 2) if iss else 0.0,
+                curve=[round(100 * (ca[q] - 1), 2) for q in idx],
+                stc=[round(100 * (cs[q] - 1), 2) for q in idx])
+
+
+# ======================================================================
+#  GÜVEN PUANI VE AÇIKLAMA
+# ======================================================================
+def confidence(f, sig, s, align, rel):
+    """Kural tabanlı güven puanı (kalibre edilmiş olasılık DEĞİL)."""
+    if sig not in ("AL", "ZAYIF", "SAT"):
+        return None, []
+    c = 40 + 40 * min(1.0, abs(s))
+    parts = [f"skor gücü {round(c)}"]
+    if not f["vol_ok"]:
+        c -= 15
+        parts.append("hacim teyidi yok -15")
+    want, opp = ("AŞAĞI", "YUKARI") if sig == "SAT" else ("YUKARI", "AŞAĞI")
+    ag = sum(1 for v in align.values() if v == want)
+    op = sum(1 for v in align.values() if v == opp)
+    d = (ag - op) * 4
+    c += d
+    parts.append(f"zaman dilimi uyumu {ag}/4 {d:+d}")
+    d = round((rel - 0.5) * 30)
+    c += d
+    parts.append(f"benzer geçmiş sinyaller {d:+d}")
+    if f["regime"] == "VOLATİL":
+        c -= 10
+        parts.append("yüksek volatilite -10")
+    return int(max(5, min(95, round(c)))), parts
+
+
+def explain(f, s, cb, align):
+    reg = f["regime"]
+    out = [f"Rejim: {reg} (ADX {f['adx']:.0f}, volatilite normalin {f['vr']:.1f} katı)"]
+    if reg == "YATAY":
+        out.append(f"RSI {f['rsi_val']:.0f}: " + ("aşırı satım bölgesi (+)" if f["rsi"] == 1 else
+                   "aşırı alım bölgesi (−)" if f["rsi"] == -1 else "nötr bölge (0)"))
+        out.append("Bollinger: " + ("fiyat alt bandın altında (+)" if f["bb"] == 1 else
+                   "fiyat üst bandın üstünde (−)" if f["bb"] == -1 else "fiyat bant içinde (0)"))
+    else:
+        out.append("EMA20/50: " + ("EMA20 > EMA50 ve fiyat EMA50 üstünde (+)" if f["ema"] == 1 else
+                   "EMA20 < EMA50 ve fiyat EMA50 altında (−)" if f["ema"] == -1 else "EMA'lar karışık (0)"))
+        out.append("MACD histogramı: " + ("pozitif ve güçleniyor (+)" if f["macd"] == 1 else
+                   "negatif ve zayıflıyor (−)" if f["macd"] == -1 else "kararsız (0)"))
+        out.append("Donchian: " + ("20 mumluk tepe kırıldı (+)" if f["don"] == 1 else
+                   "20 mumluk dip kırıldı (−)" if f["don"] == -1 else "kırılım yok (0)"))
+    out.append("OBV: " + ("ortalamasının üstünde, hacim girişi (+)" if f["obv"] == 1 else
+               "ortalamasının altında, hacim çıkışı (−)"))
+    out.append("Hacim teyidi: " + ("var" if f["vol_ok"] else "yok, güven puanı düşürüldü"))
+    out.append(f"Ağırlık profili: trend={cb[0]}, yatay={cb[1]}; ağırlıklı skor {s:+.2f}")
+    out.append("Zaman dilimleri: " + ", ".join(f"{a} {b.lower()}" for a, b in align.items()))
+    return out
+
+
 def analyze(sym, btc):
     k = klines(sym, TIMEFRAME, 1000)
-    if len(k) < 120:
+    if len(k) < 200:
         return None
+    hk = klines(sym, HTF, 300)
     S = build_series(k)
     L = len(k)
-    res = [None] * L
-    for j in range(60, L):
-        res[j] = score_at(j, S)
+    F = [None] * L
+    for j in range(FSTART, L):
+        F[j] = features(j, S)
+    htf = align_htf(k, hk, htf_trends(hk))
+    raw_sg, fin = {}, {}
+    for cb in COMBOS:
+        sg = [sig_from(f, *cb) if f else (0.0, "BEKLE") for f in F]
+        raw_sg[cb] = sg
+        fin[cb] = ["BEKLE" if (g[1] in ("AL", "ZAYIF") and h == "AŞAĞI") else g[1]
+                   for g, h in zip(sg, htf)]
     i = L - 1
-    sc, raw, regime, votes = res[i]
-    flips = [(j, res[j][1]) for j in range(61, L)
-             if res[j][1] != res[j - 1][1] and res[j][1] in ("AL", "SAT")]
-    k4 = klines(sym, HTF, 100)
-    c4 = [x["c"] for x in k4]
-    e20, e50 = ema_series(c4, 20), ema_series(c4, 50)
-    trend4 = "YUKARI" if (c4[-1] > e50[-1] and e20[-1] > e50[-1]) else \
-        ("AŞAĞI" if (c4[-1] < e50[-1] and e20[-1] < e50[-1]) else "YATAY")
-    final, note = raw, ""
-    if raw in ("AL", "ZAYIF") and trend4 == "AŞAĞI":
-        final, note = "BEKLE", f"{HTF_LABEL} trend aşağı, {raw} iptal"
+    cb_live = fit(k, S, F, fin, max(FSTART + 1, L - 1 - WF_TRAIN), L - 1)[0] if ADAPTIVE else DEFAULT
+    s_live, raw = raw_sg[cb_live][i]
+    signal, note = fin[cb_live][i], ""
+    if raw in ("AL", "ZAYIF") and signal == "BEKLE":
+        note = f"{HTF_LABEL} trend aşağı, {raw} iptal"
     elif raw in ("AL", "ZAYIF") and btc["weak"]:
-        final, note = "BEKLE", f"BTC zayıf, {raw} iptal"
+        signal, note = "BEKLE", f"BTC zayıf, {raw} iptal"
+    f = F[i]
+    hs = htf[i]
+    tfc = {TIMEFRAME: trend_of(S["c"]), HTF: hs}
+    for tf in ("15m", "1h", "4h", "1d"):
+        if tf not in tfc:
+            try:
+                tfc[tf] = trend_of([x["c"] for x in klines(sym, tf, 100)])
+            except Exception:
+                tfc[tf] = "?"
+    align = {tf: tfc[tf] for tf in ("15m", "1h", "4h", "1d")}
+    fs_live = fin[cb_live]
+    live_tr = simulate(k, S, F, fs_live, FSTART + 1, L)
+    same = [t for t in live_tr if t["reg"] == f["regime"]]
+    rel = (sum(1 for t in same if t["net"] > 0) + 2) / (len(same) + 4)
+    conf, parts = confidence(f, signal if signal != "BEKLE" else raw, s_live, align, rel)
+    why = explain(f, s_live, cb_live, align)
+    why.append(f"Benzer geçmiş sinyaller ({f['regime']} rejimi): {len(same)} işlem, "
+               f"%{round(100 * rel)} başarı (az işlemde 50'ye çekilmiş tahmin)")
+    flips = [(j, fs_live[j]) for j in range(FSTART + 1, L)
+             if fs_live[j] != fs_live[j - 1] and fs_live[j] in ("AL", "SAT")]
     price = S["c"][i]
-    a = atr(k)
-    stop = price - ATR_MULT * a
+    stop = price - ATR_MULT * S["atr"][i]
     s0 = L - CHART_N
     rows = lambda arr: [r6(x) for x in arr[s0:]]
+    if f["regime"] == "YATAY":
+        names, vals, wts = RANGE_NAMES, (f["rsi"], f["bb"], f["obv"]), RANGE_PRE[cb_live[1]]
+    else:
+        names, vals, wts = TREND_NAMES, (f["ema"], f["macd"], f["don"], f["obv"]), TREND_PRE[cb_live[0]]
+    wf = walk_forward(k, S, F, fin, L) if L >= FSTART + 1 + WF_TRAIN + 2 * WF_TEST + 1 else None
     return dict(
-        sym=sym, price=r6(price), signal=final, raw=raw, score=sc, regime=regime,
-        votes=votes, trend4=trend4, rsi=round(S["rsi"][i]), adx=round(S["adx"][i]),
+        sym=sym, price=r6(price), signal=signal, raw=raw, score=round(s_live, 2), regime=f["regime"],
+        votes=dict(zip(names, vals)), wts=dict(zip(names, wts)), trend4=hs,
+        rsi=round(S["rsi"][i]), adx=round(f["adx"]), vr=round(f["vr"], 1), vol_ok=f["vol_ok"],
         note=note, stop=r6(stop), target=r6(price + RR_TARGET * (price - stop)),
-        bt=backtest(k, S, res),
+        conf=conf, conf_parts=parts, explain=why, mtf=align,
+        profile={"trend": cb_live[0], "range": cb_live[1]},
+        risk_mult=VOL_RISK_MULT if f["regime"] == "VOLATİL" else 1.0,
+        bt=bt_from(simulate(k, S, F, fin[DEFAULT], FSTART + 1, L), S, FSTART + 1, L),
+        wf=wf,
         stats={"al": _stat(flips, "AL", S["c"]), "sat": _stat(flips, "SAT", S["c"]),
-               "days": round((L - 60) * TF_MIN / 1440), "fwd_h": FWD_H},
+               "days": round((L - FSTART) * TF_MIN / 1440), "fwd_h": FWD_H},
         chart=dict(t0=k[s0]["t"], t1=k[-1]["t"],
                    o=rows([x["o"] for x in k]), h=rows(S["h"]), l=rows(S["l"]), c=rows(S["c"]),
                    e20=rows(S["e20"]), e50=rows(S["e50"]), bu=rows(S["bu"]), bl=rows(S["bl"]),
@@ -849,7 +1083,9 @@ def _round(snap, hist):
                      else " Elinde varsa cikisi dusun, yoksa alma.")
             notify(f"Takip: {s_[:-4]} {t['signal']}",
                    f"{s_}: teknik sinyal {prev} -> {t['signal']} (rejim {t['regime']}, "
-                   f"skor {t['score']}, fiyat {fmt(t['price'])}).{extra}")
+                   f"skor {t['score']}, fiyat {fmt(t['price'])}).{extra}"
+                   + (f" Güven {t['conf']}/100." if t.get("conf") is not None else "")
+                   + (" Yüksek volatilite: pozisyonu yarıya indir." if t.get("risk_mult", 1) < 1 else ""))
             wl[wkey] = time.time()
         wst[s_] = t["signal"]
     cd0["_watch"] = wst
@@ -907,7 +1143,8 @@ def _round(snap, hist):
         ok = p["risk"][0] and p.get("vote") == "BUY"
         p["decision"] = "ATLA"
         if ok and len(approved) < MAX_SIGNALS:
-            qty = size(p["plan"]["entry"], p["plan"]["stop"])
+            rm = (get_tech(p["sym"]) or {}).get("risk_mult", 1.0)
+            qty = math.floor(size(p["plan"]["entry"], p["plan"]["stop"]) * rm * 1e6) / 1e6
             notional = qty * p["plan"]["entry"]
             if notional < MIN_NOTIONAL:
                 p["note"] = f"pozisyon çok küçük ({notional:.1f} USDT)"
@@ -928,7 +1165,8 @@ def _round(snap, hist):
                 f"  giriş {fmt(pl['entry'])} | stop {fmt(pl['stop'])} | hedef {fmt(pl['target'])}\n"
                 f"  miktar {qty:g} {p['base']} (~{notional:.0f} USDT, "
                 f"maks. kayıp ~{qty * (pl['entry'] - pl['stop']):.2f} USDT)\n"
-                f"  gerekçe: hacim {p['ratio']:.1f}x, 24s {p['chg']:+.1f}%, {nw}")
+                f"  gerekçe: hacim {p['ratio']:.1f}x, 24s {p['chg']:+.1f}%, {nw}"
+                + (", yüksek volatilite: risk yarıya indirildi" if rm < 1 else ""))
         else:
             why = p["risk"][1] if not p["risk"][0] else f"Skeptic oyu {p.get('vote')}"
             p["decision"] = "BEKLE" if p.get("vote") == "WAIT" else "ATLA"
