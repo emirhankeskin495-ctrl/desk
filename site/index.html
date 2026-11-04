@@ -13,6 +13,11 @@ main{max-width:1120px;margin:auto}.bar{display:flex;align-items:center;justify-c
 .sectionhead{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:24px 0 14px}.sectionhead h2{font-size:17px;margin:0}.sectionhead small{color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.asset{position:relative;display:flex;flex-direction:column;min-height:210px;padding:22px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#172337,#101827 72%);transition:transform .18s,border-color .18s,background .18s;overflow:hidden}.asset:hover{transform:translateY(-3px);border-color:#527b83;background:linear-gradient(145deg,#1b3440,#111827 75%)}.asset.primary{border-color:#286c65;background:linear-gradient(145deg,#123a3a,#10202d 78%)}.asset:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.assethead{display:flex;align-items:center;justify-content:space-between}.icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#ffffff0d;font-size:21px}.tag{font-size:10px;letter-spacing:.12em;color:var(--accent);font-weight:800}.soon{color:var(--gold)}.asset h3{font-size:23px;margin:25px 0 6px;letter-spacing:-.03em}.asset p{color:var(--muted);margin:0;max-width:440px;font-size:13px}.enter{margin-top:auto;padding-top:20px;font-size:12px;font-weight:700;color:var(--accent)}.disabled{opacity:.72;cursor:default}.disabled:hover{transform:none;border-color:var(--line);background:linear-gradient(145deg,#172337,#101827 72%)}.foot{margin-top:28px;color:#718096;font-size:12px;border-top:1px solid var(--line);padding-top:18px}
 @media(max-width:640px){body{padding:18px 15px 30px}.hero{padding:46px 0 26px}.grid{grid-template-columns:1fr}.asset{min-height:180px}.sectionhead{align-items:start;flex-direction:column;gap:4px}}
+
+/* MarketPulse directional atmosphere */
+body{position:relative;isolation:isolate;background:linear-gradient(180deg,#10251b 0%,#101713 43%,#211714 100%)}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(125,205,91,.13) 0%,transparent 42%,rgba(220,75,65,.16) 100%);opacity:var(--scroll-atmosphere,.85);transition:opacity .25s}
+
 </style>
 </head>
 <body><main>
