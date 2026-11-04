@@ -57,7 +57,7 @@ footer{margin-top:22px;color:var(--mu);font-size:12px}
 /* MarketPulse: scroll + signal driven color atmosphere */
 body{position:relative;isolation:isolate;background:linear-gradient(180deg,#12241a 0%,#101713 34%,#171713 66%,#281916 100%)}
 body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(135deg,rgba(123,207,91,var(--scroll-green,.18)),rgba(218,73,61,var(--scroll-red,.02)));transition:background .18s ease}main{position:relative;z-index:1}
-body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(130,210,91,.16),transparent 58%);opacity:var(--signal-green,0);transition:opacity .45s ease}
+body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(130,210,91,.16),transparent 58%);opacity:var(--signal-green,0);transition:opacity .45s ease}
 html[data-market-mood="SAT"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(226,74,61,.20),transparent 62%);opacity:var(--signal-red,0)}
 html[data-market-mood="AL"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(139,220,91,.2),transparent 62%);opacity:var(--signal-green,0)}
 html[data-market-mood="BEKLE"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(170,177,158,.09),transparent 62%);opacity:.7}
