@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Crypto Desk · MarketPulse</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Crypto Desk">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#14171c;--mu:#6b7280;--bd:#e5e7eb;--ok:#15803d;--okb:#dcfce7;--bad:#b91c1c;--badb:#fee2e2;--wt:#92400e;--wtb:#fef3c7;--nt:#374151;--ntb:#e5e7eb}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b21;--tx:#eceef2;--mu:#98a0ad;--bd:#272b33;--ok:#4ade80;--okb:#12301f;--bad:#f87171;--badb:#3a1618;--wt:#fbbf24;--wtb:#3a2d0e;--nt:#cbd5e1;--ntb:#2a2f38}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 -apple-system,system-ui,sans-serif;padding:max(16px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom))}
+main{max-width:760px;margin:0 auto}.topnav{display:flex;justify-content:space-between;align-items:center;margin:2px 0 18px;padding:10px 0;border-bottom:1px solid var(--bd);font-size:12px;color:var(--mu);letter-spacing:.08em}.topnav a{color:var(--tx);text-decoration:none;font-weight:700;letter-spacing:0}.topnav a:hover{color:var(--ok)}
+h1{font-size:22px;margin:4px 0 2px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px}
+.sub{color:var(--mu);font-size:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sym{font-weight:700;font-size:17px}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--ntb);color:var(--nt);white-space:nowrap}
+.ok{background:var(--okb);color:var(--ok)}.bad{background:var(--badb);color:var(--bad)}.wt{background:var(--wtb);color:var(--wt)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.grid div{background:var(--bg);border-radius:10px;padding:6px 8px}
+.grid small{display:block;color:var(--mu);font-size:11px}
+.grid b{font-size:15px}
+.mu{color:var(--mu);font-size:13px}
+.banner{background:var(--badb);color:var(--bad);border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px}
+.stats{display:flex;gap:8px}.stats .card{flex:1;text-align:center;margin:0}
+.stats b{font-size:20px;display:block}
+details.coin{padding:0}
+details.coin>summary{list-style:none;cursor:pointer;padding:12px 14px}
+details.coin>summary::-webkit-details-marker{display:none}
+details.coin .cb{padding:0 14px 12px}
+.votes{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+svg{display:block;width:100%;height:auto;margin-top:8px}
+svg path{fill:none}
+svg .up{fill:var(--ok);stroke:var(--ok)}svg .dn{fill:var(--bad);stroke:var(--bad)}
+svg rect.up,svg rect.dn{stroke:none}
+svg .band{fill:var(--mu);opacity:.12}
+svg .bb{stroke:var(--mu);stroke-width:.8;opacity:.6}
+svg .e20{stroke:#f59e0b;stroke-width:1.4}svg .e50{stroke:#3b82f6;stroke-width:1.4}
+svg .rs{stroke:#a855f7;stroke-width:1.2}
+svg .gl{stroke:var(--mu);stroke-dasharray:3 3;opacity:.6;stroke-width:.7}
+svg .lvl{stroke-dasharray:4 3;stroke-width:1}
+svg .eq{stroke:#3b82f6;stroke-width:1.6}svg .bh{stroke:var(--mu);stroke-width:1.2;stroke-dasharray:3 2}
+svg .mAL{fill:var(--ok)}svg .mSAT{fill:var(--bad)}
+svg text{fill:var(--mu);font-size:9px}
+svg .tagU{fill:var(--ok);stroke:none}svg .tagD{fill:var(--bad);stroke:none}svg text.tt{fill:#fff}
+.legend{font-size:12px;color:var(--mu);margin-top:4px}
+details.alg summary{cursor:pointer;font-weight:600}
+details.alg ul{margin:8px 0 0;padding-left:18px;font-size:14px}
+details.alg li{margin-bottom:5px}
+table.wf{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}table.wf td,table.wf th{padding:3px 4px;text-align:right;border-bottom:1px solid var(--bd)}table.wf td:first-child,table.wf th:first-child{text-align:left}
+footer{margin-top:22px;color:var(--mu);font-size:12px}
+</style>
+</head>
+<body>
+<main>
+<div class="topnav"><a href="./">← MarketPulse Desk</a><span>MARKETPULSE / CRYPTO</span></div><h1>Crypto Desk</h1>
+<div class="sub" id="upd">Yükleniyor…</div>
+<div id="app"></div>
+<footer>Sadece öneri, yatırım tavsiyesi değildir. Sonuçlar simülasyondur: komisyon (yön başına %0,1) ve kayma hesaba katılır. Limit giriş için fiyatın limitin altına inmesi gerekir, dolum mumunda hedef sayılmaz, stop ve hedef aynı mumdaysa stop sayılır. Geçmiş sonuç geleceği garanti etmez.</footer>
+</main>
+<script>
+var TFL="1 saatlik",HTFL="4 saatlik",HTFS="4s";
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fm(x){x=Number(x);if(!isFinite(x))return "-";return String(Number(x.toPrecision(6)))}
+function ago(ms){var m=Math.round(ms/60000);if(m<1)return "az önce";if(m<60)return m+" dk önce";var h=Math.floor(m/60);return h+" sa "+(m%60)+" dk önce"}
+function tm(iso){return new Date(iso).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
+function chip(t,c){return '<span class="chip '+(c||"")+'">'+esc(t)+'</span>'}
+var STC={"HEDEF":"ok","STOP":"bad","AÇIK":"wt","BEKLİYOR":"wt"};
+var SGC={"AL":"ok","ZAYIF":"wt","SAT":"bad","BEKLE":""};
+function sigCard(h,now){
+  var tc=now&&now[h.symbol]?chip("Teknik: "+now[h.symbol],SGC[now[h.symbol]]):"";
+  return '<div class="card"><div class="row"><span class="sym">'+esc(h.symbol)+'</span><span>'+tc+" "+chip(h.status,STC[h.status])+'</span></div>'+
+  '<div class="grid"><div><small>Giriş</small><b>'+fm(h.entry)+'</b></div><div><small>Stop</small><b>'+fm(h.stop)+'</b></div><div><small>Hedef</small><b>'+fm(h.target)+'</b></div></div>'+
+  '<div class="mu" style="margin-top:6px">Miktar '+fm(h.qty)+' (~'+fm(h.notional)+' USDT) · '+tm(h.time)+' · haber: '+esc(h.news)+'</div></div>';
+}
+function r1(x){return +x.toFixed(1)}
+function axf(v,rg){var st=rg/4,dec=st>=1?0:Math.min(8,Math.ceil(-Math.log10(st||1))+1);return v.toFixed(dec)}
+function chart(c,lv){
+  var W=372,AX=50,Wp=W-AX,PH=180,RH=44,MH=40,G=10,TH=18,pad=6,n=c.c.length,step=(Wp-8)/n,bw=Math.max(1.4,step*.62),i;
+  var lo=1e18,hi=-1e18;
+  for(i=0;i<n;i++){lo=Math.min(lo,c.l[i],c.bl[i]);hi=Math.max(hi,c.h[i],c.bu[i])}
+  var rg=hi-lo||hi*.01||1;lo-=rg*.03;hi+=rg*.03;rg=hi-lo;
+  lv=(lv||[]).filter(function(v){return v.v>lo-rg*.25&&v.v<hi+rg*.25});
+  lv.forEach(function(v){lo=Math.min(lo,v.v);hi=Math.max(hi,v.v)});
+  rg=hi-lo;
+  function X(i){return r1(4+step*(i+.5))}
+  function Y(v){return r1(pad+(hi-v)/(rg||1)*(PH-2*pad))}
+  var H=PH+G+RH+G+MH+TH,s="",up="",dn="";
+  for(i=0;i<=4;i++){var gv=lo+rg*i/4;s+='<line x1="4" x2="'+Wp+'" y1="'+Y(gv)+'" y2="'+Y(gv)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+(Y(gv)+3)+'">'+axf(gv,rg)+'</text>'}
+  var ti=[0,Math.round((n-1)/3),Math.round(2*(n-1)/3),n-1];
+  ti.forEach(function(k,q){var x=X(k);s+='<line x1="'+x+'" x2="'+x+'" y1="0" y2="'+(H-TH)+'" class="gl" style="opacity:.25"/><text x="'+x+'" y="'+(H-4)+'" text-anchor="'+(q===0?"start":q===3?"end":"middle")+'">'+tm(c.t0+(c.t1-c.t0)*k/(n-1))+'</text>'});
+  for(i=0;i<n;i++)up+=(i?"L":"M")+X(i)+","+Y(c.bu[i]);
+  for(i=n-1;i>=0;i--)dn+="L"+X(i)+","+Y(c.bl[i]);
+  s+='<path d="'+up+dn+'Z" class="band"/>';
+  function ln(a,cl,Yf){var d="";for(var j=0;j<n;j++)d+=(j?"L":"M")+X(j)+","+Yf(a[j]);return '<path d="'+d+'" class="'+cl+'"/>'}
+  s+=ln(c.bu,"bb",Y)+ln(c.bl,"bb",Y)+ln(c.e50,"e50",Y)+ln(c.e20,"e20",Y);
+  for(i=0;i<n;i++){
+    var cl=c.c[i]>=c.o[i]?"up":"dn";
+    s+='<line x1="'+X(i)+'" x2="'+X(i)+'" y1="'+Y(c.h[i])+'" y2="'+Y(c.l[i])+'" class="'+cl+'"/>';
+    s+='<rect x="'+r1(X(i)-bw/2)+'" y="'+Y(Math.max(c.o[i],c.c[i]))+'" width="'+r1(bw)+'" height="'+r1(Math.max(1,Math.abs(Y(c.o[i])-Y(c.c[i]))))+'" class="'+cl+'"/>';
+  }
+  lv.forEach(function(v){
+    s+='<line x1="4" x2="'+Wp+'" y1="'+Y(v.v)+'" y2="'+Y(v.v)+'" class="lvl" style="stroke:'+v.col+'"/><text x="'+(Wp-2)+'" y="'+(Y(v.v)-2)+'" text-anchor="end">'+v.t+' '+fm(v.v)+'</text>';
+  });
+  (c.mk||[]).forEach(function(m){
+    var x=X(m.i);
+    if(m.t==="AL"){var y=Y(c.l[m.i])+4;s+='<polygon points="'+x+","+y+" "+r1(x-4.5)+","+r1(y+9)+" "+r1(x+4.5)+","+r1(y+9)+'" class="mAL"/>'}
+    else{var y2=Y(c.h[m.i])-4;s+='<polygon points="'+x+","+y2+" "+r1(x-4.5)+","+r1(y2-9)+" "+r1(x+4.5)+","+r1(y2-9)+'" class="mSAT"/>'}
+  });
+  var ly=Y(c.c[n-1]),lc=c.c[n-1]>=c.o[n-1]?"tagU":"tagD";
+  s+='<rect x="'+(Wp+1)+'" y="'+r1(ly-6)+'" width="'+(AX-2)+'" height="12" rx="3" class="'+lc+'"/><text x="'+(Wp+4)+'" y="'+(ly+3)+'" class="tt">'+axf(c.c[n-1],rg)+'</text>';
+  var rt=PH+G;
+  function RY(v){return r1(rt+(100-v)/100*RH)}
+  s+='<line x1="4" x2="'+Wp+'" y1="'+RY(70)+'" y2="'+RY(70)+'" class="gl"/><line x1="4" x2="'+Wp+'" y1="'+RY(30)+'" y2="'+RY(30)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+(RY(70)+3)+'">70</text><text x="'+(Wp+4)+'" y="'+(RY(30)+3)+'">30</text><text x="'+(Wp+4)+'" y="'+(RY(100)+9)+'">RSI '+Math.round(c.rsi[n-1])+'</text>'+ln(c.rsi,"rs",RY);
+  var mt=rt+RH+G,mx=0;
+  for(i=0;i<n;i++)mx=Math.max(mx,Math.abs(c.mh[i]));
+  var z=mt+MH/2;
+  s+='<line x1="4" x2="'+Wp+'" y1="'+r1(z)+'" y2="'+r1(z)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+r1(z+3)+'">MACD 0</text>';
+  for(i=0;i<n;i++){var hh=mx?c.mh[i]/mx*(MH/2-2):0;s+='<rect x="'+r1(X(i)-bw/2)+'" y="'+r1(hh>=0?z-hh:z)+'" width="'+r1(bw)+'" height="'+r1(Math.max(.6,Math.abs(hh)))+'" class="'+(hh>=0?"up":"dn")+'"/>'}
+  var L=n-1;
+  return '<svg viewBox="0 0 '+W+" "+H+'">'+s+'</svg>'+
+  '<div class="legend">Son kapanış <b>'+fm(c.c[L])+'</b> · <span style="color:#f59e0b">━ EMA20 '+fm(c.e20[L])+'</span> · <span style="color:#3b82f6">━ EMA50 '+fm(c.e50[L])+'</span> · Bollinger alt/üst '+fm(c.bl[L])+' / '+fm(c.bu[L])+' · <span style="color:var(--ok)">▲ AL</span> <span style="color:var(--bad)">▼ SAT</span> ('+TFL+' skorun değiştiği mum)</div>';
+}
+function btChart(b){
+  var W=372,H=110,AX=50,Wp=W-AX,pad=8,n=b.curve.length;
+  var all=b.curve.concat(b.bhc,[0]),lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),rg=(hi-lo)||1;
+  function X(i){return r1(4+(Wp-8)*i/Math.max(1,n-1))}
+  function Y(v){return r1(pad+(hi-v)/rg*(H-2*pad))}
+  function pl(a,cl){var d="";for(var i=0;i<a.length;i++)d+=(i?"L":"M")+X(i)+","+Y(a[i]);return '<path d="'+d+'" class="'+cl+'"/>'}
+  function sg(v){return (v>0?"+":"")+v+"%"}
+  var s='<line x1="4" x2="'+Wp+'" y1="'+Y(0)+'" y2="'+Y(0)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+(Y(0)+3)+'">0%</text>'+pl(b.bhc,"bh")+pl(b.curve,"eq");
+  s+='<text x="'+(Wp+4)+'" y="'+(Y(b.curve[n-1])-2)+'" style="fill:#3b82f6">'+sg(b.curve[n-1])+'</text><text x="'+(Wp+4)+'" y="'+(Y(b.bhc[n-1])+9)+'">'+sg(b.bhc[n-1])+'</text>';
+  return '<svg viewBox="0 0 '+W+" "+H+'">'+s+'</svg>';
+}
+function btText(b){
+  if(!b.n)return '<div class="mu">Son ~'+b.days+' günde bu stratejide hiç AL sinyali oluşmadı, backtest yapılamadı.</div>';
+  return '<div class="mu" style="margin-top:8px"><b>Tüm dönem backtest</b> (statik dengeli ağırlık, doğrulama değil, iyimser; son ~'+b.days+' gün, komisyon %0,1 + kayma %0,05 yön başına): '+b.n+' işlem, %'+b.win+' kazanma, hesap getirisi <b>'+(b.ret>0?"+":"")+b.ret+'%</b>, en büyük düşüş (mum bazında, açık pozisyon dahil) %'+b.dd+(b.pf!=null?', kâr faktörü '+b.pf:'')+'.</div>'+
+  '<div class="legend"><span style="color:#3b82f6">━ strateji</span> · <span>┅ aynı %10 pozisyonla al-tut ('+(b.bh>0?"+":"")+b.bh+'%)</span> · giriş: sinyalden sonraki mum açılışı; stop ve hedef aynı mumdaysa stop; en fazla '+b.hold_h+' saat</div>'+btChart(b);
+}
+function sg(v){return (v>0?"+":"")+v}
+function wrow(n,m,dd){return '<tr><td>'+n+'</td><td>'+m.n+'</td><td>%'+m.win+'</td><td>'+sg(m.avg)+'%</td><td>'+sg(m.ret)+'%</td><td>'+(m.pf!=null?m.pf:"-")+'</td><td>%'+dd+'</td></tr>'}
+function wfText(w){
+  if(!w)return '<div class="mu" style="margin-top:8px">Walk-forward doğrulama için yeterli geçmiş veri yok.</div>';
+  var gap=Math.round((w.is_avg-w.ad.avg)*100)/100,hd=w.ho;
+  var s='<div class="mu" style="margin-top:10px"><b>Doğrulama (walk-forward)</b>: '+w.profiles+' ağırlık profili arasından seçim her pencerede sadece geçmiş '+w.train+' mumla yapıldı (varsayılandan ancak belirgin üstünlükle vazgeçilir: '+w.folds+' pencerenin '+w.switched+'’inde farklı profil seçildi), sonraki '+w.test+' mumda denendi. Toplam ~'+w.days+' gün görülmemiş veri.</div>'+
+  '<table class="wf"><tr><th></th><th>işlem</th><th>kazanma</th><th>işlem başı</th><th>getiri</th><th>KF</th><th>MDD</th></tr>'+wrow("Adaptif",w.ad,w.dd_ad)+wrow("Statik",w.st,w.dd_st)+'</table>';
+  if(hd)s+='<div class="mu" style="margin-top:8px"><b>Final test</b>: son ~'+hd.days+' gün hiçbir seçimde ve pencerede kullanılmadı, profil bu bölgeden önceki veriyle seçilip bir kez denendi.</div>'+
+  '<table class="wf"><tr><th></th><th>işlem</th><th>kazanma</th><th>işlem başı</th><th>getiri</th><th>KF</th><th>MDD</th></tr>'+wrow("Adaptif",hd.ad,hd.dd_ad)+wrow("Statik",hd.st,hd.dd_st)+'</table>';
+  var r=w.reg_ad;
+  s+='<div class="mu" style="margin-top:6px">Rejim bazında (adaptif, görülmemiş veri, işlem sayısı ve işlem başı net getiri): TREND '+r.TREND.n+' / '+sg(r.TREND.avg)+'% · YATAY '+r.YATAY.n+' / '+sg(r.YATAY.avg)+'% · VOLATİL '+r.VOLATİL.n+' / '+sg(r.VOLATİL.avg)+'%.</div>'+
+  '<div class="mu">Seçim anında işlem başı ortalama '+sg(w.is_avg)+'%, görülmemiş veride '+sg(w.ad.avg)+'% (fark '+gap+' puan; büyüdükçe seçim geçmişe uyduruluyor demektir). MDD: mum bazında, açık pozisyon dahil.</div>';
+  var few=Math.min(w.ad.n,w.st.n)<30||(hd&&Math.min(hd.ad.n,hd.st.n)<30);
+  if(few)s+='<div class="banner" style="background:var(--wtb);color:var(--wt)">İşlem sayısı 30’un altında: bu tablodaki farklar istatistiksel olarak anlamsız olabilir. Asıl kanıt aşağıdaki canlı “İleri test”tir.</div>';
+  return s+btChart({curve:w.curve,bhc:w.stc})+'<div class="legend"><span style="color:#3b82f6">━ adaptif</span> · ┅ statik (görülmemiş veride, ardışık pencereler)</div>';
+}
+function fwdCard(f){
+  if(!f)return '';
+  var v=f.variants,s='<h2>İleri test (canlı doğrulama)</h2><div class="card"><div class="mu">Sistem, her AL dönüşünü anında kaydeder; giriş sinyal mumunu izleyen ilk 15 dk mumunun açılışıdır, sonuç sonradan gerçek fiyatlarla ölçülür. Geçmişe bakmaz, bu yüzden en güvenilir test budur. Adaptif ve statik profil yan yana izlenir. Bekleyen kayıt: '+f.pending+'.</div>'+
+  '<table class="wf"><tr><th></th><th>sonuçlanan</th><th>kazanma</th><th>işlem başı R</th><th>toplam R</th></tr>'+
+  '<tr><td>Adaptif</td><td>'+v.adaptif.n+'</td><td>%'+v.adaptif.win+'</td><td>'+sg(v.adaptif.avg_r)+'</td><td>'+sg(v.adaptif.tot_r)+'</td></tr>'+
+  '<tr><td>Statik</td><td>'+v.statik.n+'</td><td>%'+v.statik.win+'</td><td>'+sg(v.statik.avg_r)+'</td><td>'+sg(v.statik.tot_r)+'</td></tr></table>';
+  s+='<div class="mu" style="margin-top:8px">Güven puanı kalibrasyonu (adaptif AL kayıtları; “gerçekleşen” = maliyet sonrası kârlı kapanış oranı):</div><table class="wf"><tr><th>puan aralığı</th><th>kayıt</th><th>gerçekleşen</th></tr>'+
+  f.calib.map(function(c){return '<tr><td>'+c.lo+'–'+c.hi+'</td><td>'+c.n+'</td><td>'+(c.obs!=null?'%'+c.obs:'-')+'</td></tr>'}).join("")+'</table>';
+  if(f.brier)s+='<div class="mu" style="margin-top:6px">Brier skoru (puan/100 olasılık gibi okunursa): <b>'+f.brier.score+'</b>, hep “taban oranı” tahmin eden basit yöntem: '+f.brier.base+' (n='+f.brier.n+'). Bizim skor bundan düşük değilse puan işe yaramıyor demektir.</div>';
+  var tot=v.adaptif.n+v.statik.n;
+  if(tot<60)s+='<div class="mu" style="margin-top:6px">Henüz az sonuç var. Anlamlı bir yorum için her iki profilde de en az 30 sonuçlanan kayıt gerekir; bu birkaç hafta sürebilir.</div>';
+  return s+'</div>';
+}
+function coinBody(t,d){
+  var h='';
+  if(t.conf!=null)h+='<div class="row"><span>Güven puanı <b>'+t.conf+'/100</b> <span class="mu">(kural tabanlı, kalibre edilmemiş; %'+t.conf+' başarı ihtimali demek değildir)</span></span>'+chip(t.signal==="BEKLE"?t.raw:t.signal,SGC[t.signal==="BEKLE"?t.raw:t.signal])+'</div><div class="mu">'+esc(t.conf_parts.join(" · "))+'</div>';
+  h+='<div class="votes">';
+  Object.keys(t.votes).forEach(function(k){var v=t.votes[k],w=t.wts&&t.wts[k]>1?" ×"+t.wts[k]:"";h+=chip(k+w+" "+(v>0?"+1":v<0?"−1":"0"),v>0?"ok":v<0?"bad":"")});
+  h+='</div>';
+  if(t.mtf){h+='<div class="votes">';["15m","1h","4h","1d"].forEach(function(k){var v=t.mtf[k];h+=chip(k+" "+(v==="YUKARI"?"↑":v==="AŞAĞI"?"↓":v==="YATAY"?"→":"?"),v==="YUKARI"?"ok":v==="AŞAĞI"?"bad":"")});h+='</div>'}
+  h+='<div class="mu">Rejim: <b>'+esc(t.regime)+'</b> (ADX '+t.adx+', volatilite '+t.vr+'×) · RSI '+t.rsi+' · '+HTFL+' trend: '+esc(t.trend4)+' · skor '+(t.score>0?"+":"")+t.score+(t.profile?' · profil: '+esc(t.profile.trend)+' / '+esc(t.profile.range):'')+(t.risk_mult<1?' · <b>yüksek volatilite: pozisyonu yarıya indir</b>':'')+'</div>';
+  if(t.note)h+='<div class="mu">'+esc(t.note)+'</div>';
+  if(t.raw==="AL")h+='<div class="grid"><div><small>Giriş</small><b>'+fm(t.price)+'</b></div><div><small>Stop</small><b>'+fm(t.stop)+'</b></div><div><small>Hedef</small><b>'+fm(t.target)+'</b></div></div>';
+  if(t.explain&&t.explain.length)h+='<details style="margin-top:6px"><summary class="mu" style="cursor:pointer"><b>Neden bu karar?</b></summary><ul class="mu" style="margin:6px 0 0;padding-left:18px">'+t.explain.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></details>';
+  var a=t.stats.al,s=t.stats.sat;
+  h+='<div class="mu" style="margin-top:6px">Son ~'+t.stats.days+' gün (bu coin, '+t.stats.fwd_h+' saat sonrası): AL sinyali '+a.n+' kez'+(a.n?', %'+a.hit+'’i artıda, ort. '+(a.avg>0?"+":"")+a.avg+'%':'')+'. SAT sinyali '+s.n+' kez'+(s.n?', %'+s.hit+'’i düşüşte, ort. '+(s.avg>0?"+":"")+s.avg+'%':'')+'. Küçük örneklem, kesin kanıt sayılmaz.</div>';
+  var lv=[];
+  (d.history||[]).forEach(function(x){if(x.symbol===t.sym&&(x.status==="BEKLİYOR"||x.status==="AÇIK")){
+    lv.push({v:x.entry,t:"giriş",col:"#3b82f6"},{v:x.stop,t:"stop",col:"#ef4444"},{v:x.target,t:"hedef",col:"#22c55e"})}});
+  return h+chart(t.chart,lv)+(t.bt?btText(t.bt):'')+wfText(t.wf);
+}
+fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(function(d){
+  if(d.tf){TFL=d.tf.label;HTFL=d.tf.hlabel;HTFS=d.tf.tf==="15m"?"1s":"4s"}
+  var age=Date.now()-new Date(d.updated).getTime();
+  document.getElementById("upd").textContent="Son tur: "+tm(d.updated)+" ("+ago(age)+")";
+  var h="";
+  if(age>100*60000)h+='<div class="banner">Güncelleme gecikti ('+ago(age)+'). GitHub Actions sekmesinden çalışmayı kontrol et.</div>';
+  if(d.error)h+='<div class="banner">Son turda hata: '+esc(d.error)+'</div>';
+  if(d.btc)h+='<div class="card row"><span>BTC (4 saat)</span>'+chip((d.btc.c4>=0?"+":"")+d.btc.c4+"%"+(d.btc.weak?" zayıf":""),d.btc.weak?"bad":"ok")+'</div>';
+  var sn=d.sentiment;
+  if(sn){var fg=sn.fng!=null?sn.fng+" ("+esc(sn.fng_label)+")":"yok",fu=sn.funding!=null?"%"+sn.funding:"yok",dm=sn.dominance!=null?"%"+sn.dominance:"yok";
+    h+='<div class="card"><div class="mu">Korku/Açgözlülük: <b>'+fg+'</b> · BTC fonlama oranı: <b>'+fu+'</b> · BTC dominansı: <b>'+dm+'</b></div></div>';}
+  if(d.risk_ctx)h+='<div class="card mu">Açık risk: <b>%'+d.risk_ctx.open_pct+'</b> / %'+d.risk_ctx.limit_pct+' (hesap) · son 24 saat: <b>'+(d.risk_ctx.day_r>0?"+":"")+d.risk_ctx.day_r+'R</b></div>';
+  if(d.alerts&&d.alerts.length){h+='<h2>Fiyat alarmları</h2>';d.alerts.forEach(function(a){h+='<div class="card row"><span><b>'+esc(a.sym.replace(/USDT$/,""))+'</b> '+esc(a.op)+' '+fm(a.val)+' <span class="mu">(şimdi '+fm(a.price)+')</span></span>'+chip(a.hit?"tetiklendi":"bekliyor",a.hit?"ok":"")+'</div>'})}
+  var act=(d.history||[]).filter(function(x){return x.status==="BEKLİYOR"||x.status==="AÇIK"});
+  h+="<h2>Aktif öneriler</h2>"+(act.length?act.map(function(x){return sigCard(x,d.now)}).join(""):'<div class="card mu">Şu an aktif öneri yok.</div>');
+  var w=d.watch||[];
+  h+="<h2>Teknik analiz (★ takip listen + hacim liderleri, sinyal: "+TFL+" mum)</h2><div class='mu' style='margin-bottom:8px'>Bir coine dokun: grafik, gösterge oyları ve geçmiş sinyal istatistiği açılır. SAT = elinde varsa çıkmayı düşün, yoksa alma. Takip listesini repodaki watchlist.txt dosyasından değiştirebilirsin.</div>";
+  if(d.missing&&d.missing.length)h+='<div class="banner">Binance’te bulunamadı: '+esc(d.missing.join(", "))+' (watchlist.txt’yi kontrol et)</div>';
+  w.forEach(function(t,i){
+    h+='<details class="card coin" data-i="'+i+'"><summary><div class="row"><span><span class="sym">'+(t.pin?"★ ":"")+esc(t.sym.replace(/USDT$/,""))+'</span> <span class="mu">'+fm(t.price)+'</span></span>'+chip(t.signal,SGC[t.signal])+'</div>'+
+    '<div class="mu">skor '+(t.score>0?"+":"")+t.score+' · '+esc(t.regime)+' · '+HTFS+' '+esc(t.trend4)+(t.conf!=null?' · güven '+t.conf:'')+(t.note?' · '+esc(t.note):'')+'</div></summary><div class="cb"></div></details>';
+  });
+  h+="<h2>Hacim taraması (son tur)</h2>";
+  if(!d.picks||!d.picks.length)h+='<div class="card mu">'+esc(d.lead||"Olağandışı hareket yok.")+'</div>';
+  else d.picks.forEach(function(p){
+    var dc=p.decision==="AL"?"ok":(p.decision==="BEKLE"?"wt":"bad");
+    h+='<div class="card"><div class="row"><span class="sym">'+esc(p.sym)+'</span>'+chip(p.decision,dc)+'</div>'+
+    '<div class="mu">'+fm(p.price)+' · 24s '+(p.chg>=0?"+":"")+p.chg+'% · hacim '+p.ratio+'x · haber: '+esc(p.news)+'</div>'+
+    '<div class="mu">Risk: '+(p.risk_ok?"geçti":"reddetti")+' ('+esc(p.risk_note)+')'+(p.vote?' · Skeptic: '+esc(p.vote):'')+'</div>'+
+    (p.why&&p.why.length?'<div class="mu">İtiraz: '+esc(p.why.join("; "))+'</div>':'')+
+    (p.note?'<div class="mu">'+esc(p.note)+'</div>':'')+'</div>';
+  });
+  h+=fwdCard(d.forward);
+  var s=d.stats||{wins:0,losses:0,r:0};
+  h+="<h2>Geçmiş öneriler</h2><div class='stats'><div class='card'><b>"+s.wins+"</b><span class='mu'>hedef</span></div><div class='card'><b>"+s.losses+"</b><span class='mu'>stop</span></div><div class='card'><b>"+(s.r>0?"+":"")+s.r+"R</b><span class='mu'>net R (maliyet dahil)</span></div></div><div style='height:10px'></div>";
+  var old=d.history||[];
+  h+=old.length?old.map(function(x){return sigCard(x,null)}).join(""):'<div class="card mu">Henüz öneri yok. Çoğu tur sessiz geçer.</div>';
+  h+='<h2>Algoritma</h2><details class="card alg"><summary>Nasıl çalışıyor?</summary><ul>'+
+  '<li><b>Rejim tespiti:</b> Her mum için üç durumdan biri seçilir. VOLATİL: ATR yüzdesi son 100 mum medyanının 1,8 katını aşıyor. TREND: ADX 25 ve üstü. YATAY: diğerleri.</li>'+
+  '<li><b>Adaptif ağırlıklandırma:</b> Trend ve volatil rejimde EMA 20/50, MACD, Donchian kırılımı ve OBV; yatay rejimde RSI, Bollinger ve OBV oy verir. Oylar ağırlıklarla toplanır, trend rejiminde skor ADX ile büyütülür. VOLATİL rejimde AL/SAT eşiği daha yüksektir.</li>'+
+  '<li><b>Ağırlıklar nasıl seçilir:</b> 12 hazır profilden biri, o coinin son 360 mumunda komisyon ve kayma dahil işlem başı getiriye göre seçilir. Varsayılan dengeli profilden ancak en az 8 işlem ve işlem başı en az %0,2 üstünlük varsa vazgeçilir (gürültüye uymayı azaltmak için).</li>'+
+  '<li><b>Üç katmanlı doğrulama:</b> (1) Walk-forward: seçim sadece geçmişle yapılıp sonraki mumlarda denenir. (2) Final test: son 240 mum hiçbir seçimde kullanılmaz, bir kez denenir. (3) İleri test: canlıda, gerçek zamanlı ve adaptif/statik yan yana. Sadece üçüncüsü gerçekten dokunulmamıştır; ilk ikisi yine de geçmiş veridir.</li>'+
+  '<li><b>Zaman dilimleri:</b> Sinyaller '+TFL+' mumlarla hesaplanır. 15 dakika, 1 saat, 4 saat ve günlük trend yönü ayrıca gösterilir ve güven puanına girer. '+HTFL+' trend aşağıysa AL/ZAYIF, BEKLE’ye çevrilir. BTC 4 saatte %2’den fazla düşmüşse de aynısı olur.</li>'+
+  '<li><b>Güven puanı:</b> Skor gücü, hacim teyidi (yoksa -15), zaman dilimi uyumu, o rejimde görülmemiş walk-forward işlemlerinde benzer sinyallerin başarısı ve yüksek volatilite (-10) ile hesaplanan kural tabanlı bir puandır. Kalibre edilmiş olasılık değildir; İleri test bölümündeki kalibrasyon tablosu ve Brier skoru bunun işe yarayıp yaramadığını gösterir.</li>'+
+  '<li><b>Volatilite riski:</b> VOLATİL rejimde pozisyon riski yarıya indirilir (öneri miktarlarında ve backtest’te).</li>'+
+  '<li><b>Hacim taraması:</b> Son saatin hacmi önceki 24 saatin 2 katını aşan ve yükselen coinler aday olur. Haber, risk ve şüpheci (teknik SAT dahil) kontrolünden geçerse öneri çıkar.</li>'+
+  '<li><b>Risk katmanı:</b> Açık önerilerin toplam riski hesabın %1,5’ini aşamaz. Son 24 saatte toplam kayıp 3R’yi geçerse yeni öneri durur. Stop = giriş − 1,5×ATR, hedef = riskin 2 katı. Miktar: hesabın %0,5’i risk, tek coine en fazla %10.</li>'+
+  '<li><b>Duyarlılık:</b> Korku/Açgözlülük 80 ve üstü ya da BTC fonlama oranı %0,05 üstü olursa şüpheci bot itiraz eder. Veriye ulaşılamazsa atlanır.</li>'+
+  '<li><b>Simülasyon kuralları:</b> Backtest girişi sinyalin ertesi mumunun açılışıdır (+kayma). Canlı limit önerilerinde fiyat limitin altına inmeden dolum sayılmaz, dolum mumunda hedef sayılmaz, stop ve hedef aynı mumdaysa stop. Üst zaman dilimi mumları ancak kapandıktan sonra kullanılır. Backtest’te BTC filtresi yoktur, spot işlemde fonlama maliyeti olmaz.</li></ul></details>';
+  document.getElementById("app").innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll("details.coin"),function(el){
+    el.addEventListener("toggle",function(){
+      if(el.open&&!el.dataset.done){el.dataset.done=1;el.querySelector(".cb").innerHTML=coinBody(w[+el.dataset.i],d)}
+    });
+  });
+}).catch(function(e){
+  document.getElementById("upd").textContent="";
+  document.getElementById("app").innerHTML='<div class="banner">Veri yüklenemedi. İlk çalıştırma henüz bitmemiş olabilir; birkaç dakika sonra yenile.</div>';
+});
+</script>
+</body>
+</html>
