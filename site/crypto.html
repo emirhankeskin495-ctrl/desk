@@ -53,6 +53,21 @@ details.alg ul{margin:8px 0 0;padding-left:18px;font-size:14px}
 details.alg li{margin-bottom:5px}
 table.wf{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}table.wf td,table.wf th{padding:3px 4px;text-align:right;border-bottom:1px solid var(--bd)}table.wf td:first-child,table.wf th:first-child{text-align:left}
 footer{margin-top:22px;color:var(--mu);font-size:12px}
+
+/* MarketPulse: scroll + signal driven color atmosphere */
+body{position:relative;isolation:isolate;background:linear-gradient(180deg,#12241a 0%,#101713 34%,#171713 66%,#281916 100%)}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(123,207,91,.16) 0%,rgba(16,23,19,0) 38%,rgba(218,73,61,.19) 100%);opacity:var(--scroll-atmosphere,.85);transition:opacity .25s}
+body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(130,210,91,.16),transparent 58%);opacity:var(--signal-green,0);transition:opacity .45s ease}
+html[data-market-mood="SAT"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(226,74,61,.20),transparent 62%);opacity:var(--signal-red,0)}
+html[data-market-mood="AL"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(139,220,91,.2),transparent 62%);opacity:var(--signal-green,0)}
+html[data-market-mood="BEKLE"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(170,177,158,.09),transparent 62%);opacity:.7}
+html[data-market-mood="SAT"] .page-head .eyebrow,html[data-market-mood="SAT"] .market-state:before{color:var(--bad)}
+html[data-market-mood="AL"] .page-head .eyebrow{color:var(--ok)}
+.card,details.coin{transition:border-color .25s,background-color .25s}
+details.coin[open][data-mood="AL"]{border-color:#718b45}
+details.coin[open][data-mood="SAT"]{border-color:#985344}
+@media(prefers-reduced-motion:reduce){body:before,body:after,.card,details.coin{transition:none}}
+
 </style>
 </head>
 <body>
@@ -248,5 +263,44 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   document.getElementById("app").innerHTML='<div class="banner">Veri yüklenemedi. İlk çalıştırma henüz bitmemiş olabilir; birkaç dakika sonra yenile.</div>';
 });
 </script>
+
+<script>
+(function(){
+  var root=document.documentElement, raf=false;
+  function paintScroll(){
+    var max=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
+    var p=Math.min(1,Math.max(0,window.scrollY/max));
+    root.style.setProperty('--scroll-atmosphere',(0.55+p*.55).toFixed(2));
+    root.style.setProperty('--scroll-progress',p.toFixed(3));
+    raf=false;
+  }
+  window.addEventListener('scroll',function(){if(!raf){raf=true;requestAnimationFrame(paintScroll)}},{passive:true});
+  window.addEventListener('resize',paintScroll,{passive:true});
+  document.addEventListener('click',function(e){
+    var summary=e.target.closest('details.coin > summary');
+    if(!summary)return;
+    var card=summary.parentElement;
+    var chip=summary.querySelector('.chip:last-child');
+    var signal=chip?chip.textContent.trim().toUpperCase():'BEKLE';
+    if(signal.indexOf('AL')===0)signal='AL';
+    else if(signal.indexOf('SAT')===0)signal='SAT';
+    else signal='BEKLE';
+    window.setTimeout(function(){
+      if(card.open){
+        root.dataset.marketMood=signal;
+        card.dataset.mood=signal;
+        root.style.setProperty('--signal-green',signal==='AL'?'1':'0');
+        root.style.setProperty('--signal-red',signal==='SAT'?'1':'0');
+      }else{
+        root.dataset.marketMood='NEUTRAL';
+        root.style.setProperty('--signal-green','0');
+        root.style.setProperty('--signal-red','0');
+      }
+    },0);
+  });
+  paintScroll();
+})();
+</script>
+
 </body>
 </html>
