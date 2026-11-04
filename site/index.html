@@ -13,6 +13,11 @@ main{max-width:1120px;margin:auto}.bar{display:flex;align-items:center;justify-c
 .sectionhead{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:24px 0 14px}.sectionhead h2{font-size:17px;margin:0}.sectionhead small{color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.asset{position:relative;display:flex;flex-direction:column;min-height:210px;padding:22px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#172337,#101827 72%);transition:transform .18s,border-color .18s,background .18s;overflow:hidden}.asset:hover{transform:translateY(-3px);border-color:#527b83;background:linear-gradient(145deg,#1b3440,#111827 75%)}.asset.primary{border-color:#286c65;background:linear-gradient(145deg,#123a3a,#10202d 78%)}.asset:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.assethead{display:flex;align-items:center;justify-content:space-between}.icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#ffffff0d;font-size:21px}.tag{font-size:10px;letter-spacing:.12em;color:var(--accent);font-weight:800}.soon{color:var(--gold)}.asset h3{font-size:23px;margin:25px 0 6px;letter-spacing:-.03em}.asset p{color:var(--muted);margin:0;max-width:440px;font-size:13px}.enter{margin-top:auto;padding-top:20px;font-size:12px;font-weight:700;color:var(--accent)}.disabled{opacity:.72;cursor:default}.disabled:hover{transform:none;border-color:var(--line);background:linear-gradient(145deg,#172337,#101827 72%)}.foot{margin-top:28px;color:#718096;font-size:12px;border-top:1px solid var(--line);padding-top:18px}
 @media(max-width:640px){body{padding:18px 15px 30px}.hero{padding:46px 0 26px}.grid{grid-template-columns:1fr}.asset{min-height:180px}.sectionhead{align-items:start;flex-direction:column;gap:4px}}
+
+/* MarketPulse directional atmosphere */
+body{position:relative;isolation:isolate;background:linear-gradient(180deg,#10251b 0%,#101713 43%,#211714 100%)}
+body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(135deg,rgba(125,205,91,var(--scroll-green,.16)),rgba(220,75,65,var(--scroll-red,.02)));transition:background .18s ease}.shell{position:relative;z-index:1}
+
 </style>
 </head>
 <body><main>
@@ -26,4 +31,6 @@ main{max-width:1120px;margin:auto}.bar{display:flex;align-items:center;justify-c
 <div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon">◈</div><span class="tag soon">YAKINDA</span></div><h3>Commodities Desk</h3><p>Altın, gümüş, enerji ve diğer emtialar için piyasa izleme ve analiz alanı.</p><div class="enter">Henüz kullanıma açık değil</div></div>
 </section>
 <footer class="foot">MarketPulse Desk · Analiz ve karar destek platformu. İçerikler yatırım tavsiyesi değildir.</footer>
-</main></body></html>
+</main><script>
+(function(){var root=document.documentElement,raf=false;function paint(){var max=Math.max(1,document.documentElement.scrollHeight-innerHeight),p=Math.min(1,Math.max(0,scrollY/max));root.style.setProperty('--scroll-green',(0.18*(1-p)+0.015).toFixed(3));root.style.setProperty('--scroll-red',(0.19*p+0.012).toFixed(3));raf=false}addEventListener('scroll',function(){if(!raf){raf=true;requestAnimationFrame(paint)}},{passive:true});addEventListener('resize',paint);paint()})();
+</script></body></html>
