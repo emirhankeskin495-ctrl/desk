@@ -1,0 +1,4 @@
+# Fiyat alarmlari: her satira bir tane. Ornekler (basindaki # isaretini silince aktif olur):
+# PAXG > 4100
+# SOL < 120
+# BTC > 100000
