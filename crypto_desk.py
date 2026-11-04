@@ -34,13 +34,19 @@ COOLDOWN_H = 12           # Aynı coin için tekrar öneri bekleme süresi (saat
 REQUIRE_NEWS = False      # True yapınca haber (HARD/SOFT) olmadan hiç öneri çıkmaz
 WATCH_N = 12             # Teknik analiz tablosunda kaç coin izlensin (hacme göre)
 ADX_TREND = 25            # ADX bunun üstündeyse piyasa "trend", altındaysa "yatay" sayılır
-FWD = 6                   # Geçmiş sinyal istatistiği: sinyalden kaç saat sonrasına bakılsın
+FWD_H = 6                 # Geçmiş sinyal istatistiği: sinyalden kaç saat sonrasına bakılsın
+TIMEFRAME = os.environ.get("TIMEFRAME", "1h")  # Sinyal zaman dilimi: "1h" (sakin) ya da "15m" (sık sinyal, daha çok gürültü ve komisyon)
 CHART_N = 96              # Grafikte gösterilecek mum sayısı (1s)
 MAX_TOTAL_RISK_PCT = 1.5  # Açık önerilerin toplam riski hesabın en fazla bu %'si olabilir
 DAILY_LOSS_R = 3.0        # Son 24 saatte toplam kayıp bu kadar R'yi geçerse yeni öneri durur
 FEE_PCT = 0.1             # Backtest: her işlem yönü için komisyon (%)
 WATCH_COOLDOWN_H = 0      # Takip listesi: aynı coin için aynı yönde tekrar bildirim bekleme süresi (saat)
 MIN_NOTIONAL = 5.0        # Bundan küçük pozisyonlar atlanır (Binance min ~5 USDT)
+
+_TF = {"1h": (60, "4h", "1 saatlik", "4 saatlik"), "15m": (15, "1h", "15 dakikalık", "1 saatlik")}
+if TIMEFRAME not in _TF:
+    TIMEFRAME = "1h"
+TF_MIN, HTF, TF_LABEL, HTF_LABEL = _TF[TIMEFRAME]   # ana mum süresi, üst zaman dilimi (trend filtresi)
 
 HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"]
 NEWS_FEEDS = [
@@ -297,7 +303,8 @@ def score_at(j, S):
 
 
 def _stat(flips, kind, c):
-    xs = [c[j + FWD] / c[j] - 1 for j, t in flips if t == kind and j + FWD < len(c)]
+    fwd = FWD_H * 60 // TF_MIN
+    xs = [c[j + fwd] / c[j] - 1 for j, t in flips if t == kind and j + fwd < len(c)]
     if not xs:
         return {"n": 0, "hit": 0, "avg": 0}
     good = [x for x in xs if (x > 0 if kind == "AL" else x < 0)]
@@ -357,13 +364,14 @@ def backtest(k, S, res):
         idx.append(len(curve) - 1)
     return dict(n=len(trades), win=round(100 * sum(1 for x in trades if x > 0) / len(trades)) if trades else 0,
                 ret=round(100 * (eq - 1), 2), bh=round(100 * (hold[-1] - 1), 2), dd=round(100 * dd, 2),
-                pf=round(gp / gl, 2) if gl else None, days=round((L - 60) / 24),
+                pf=round(gp / gl, 2) if gl else None, days=round((L - 60) * TF_MIN / 1440),
+                hold_h=round(48 * TF_MIN / 60),
                 curve=[round(100 * (curve[q] - 1), 2) for q in idx],
                 bhc=[round(100 * (hold[q] - 1), 2) for q in idx])
 
 
 def analyze(sym, btc):
-    k = klines(sym, "1h", 1000)
+    k = klines(sym, TIMEFRAME, 1000)
     if len(k) < 120:
         return None
     S = build_series(k)
@@ -375,14 +383,14 @@ def analyze(sym, btc):
     sc, raw, regime, votes = res[i]
     flips = [(j, res[j][1]) for j in range(61, L)
              if res[j][1] != res[j - 1][1] and res[j][1] in ("AL", "SAT")]
-    k4 = klines(sym, "4h", 100)
+    k4 = klines(sym, HTF, 100)
     c4 = [x["c"] for x in k4]
     e20, e50 = ema_series(c4, 20), ema_series(c4, 50)
     trend4 = "YUKARI" if (c4[-1] > e50[-1] and e20[-1] > e50[-1]) else \
         ("AŞAĞI" if (c4[-1] < e50[-1] and e20[-1] < e50[-1]) else "YATAY")
     final, note = raw, ""
     if raw in ("AL", "ZAYIF") and trend4 == "AŞAĞI":
-        final, note = "BEKLE", f"4 saatlik trend aşağı, {raw} iptal"
+        final, note = "BEKLE", f"{HTF_LABEL} trend aşağı, {raw} iptal"
     elif raw in ("AL", "ZAYIF") and btc["weak"]:
         final, note = "BEKLE", f"BTC zayıf, {raw} iptal"
     price = S["c"][i]
@@ -396,7 +404,7 @@ def analyze(sym, btc):
         note=note, stop=r6(stop), target=r6(price + RR_TARGET * (price - stop)),
         bt=backtest(k, S, res),
         stats={"al": _stat(flips, "AL", S["c"]), "sat": _stat(flips, "SAT", S["c"]),
-               "days": round((L - 60) / 24)},
+               "days": round((L - 60) * TF_MIN / 1440), "fwd_h": FWD_H},
         chart=dict(t0=k[s0]["t"], t1=k[-1]["t"],
                    o=rows([x["o"] for x in k]), h=rows(S["h"]), l=rows(S["l"]), c=rows(S["c"]),
                    e20=rows(S["e20"]), e50=rows(S["e50"]), bu=rows(S["bu"]), bl=rows(S["bl"]),
@@ -568,7 +576,7 @@ def skeptic(p, btc, tech=None):
         if tech["raw"] == "SAT":
             why.append("teknik skor SAT (trend/momentum aşağı)")
         elif tech["trend4"] == "AŞAĞI":
-            why.append("4 saatlik trend aşağı")
+            why.append(f"{HTF_LABEL} trend aşağı")
     if p["chg"] > 15:
         why.append(f"24s +%{p['chg']:.0f}: hareketin büyük kısmı fiyatlanmış olabilir")
     r = rsi(closes)
@@ -784,6 +792,7 @@ def _round(snap, hist):
     btc.update(sent)
     snap["sentiment"] = sent
     snap["btc"] = {"c4": round(btc["c4"], 2), "weak": btc["weak"]}
+    snap["tf"] = {"tf": TIMEFRAME, "label": TF_LABEL, "hlabel": HTF_LABEL}
     now_t = time.time()
     active = [h for h in hist if h["status"] in ("BEKLİYOR", "AÇIK")]
     ctx = {"open_risk": sum(h["qty"] * (h["entry"] - h["stop"]) for h in active),
