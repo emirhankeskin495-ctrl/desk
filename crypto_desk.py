@@ -78,9 +78,29 @@ def post(name, text):
         f.write(f"\n{datetime.datetime.now():%Y-%m-%d %H:%M} {msg}\n")
 
 
+def already_sent(title, text):
+    """ntfy'nin kendi son 12 saatlik kaydına bakar: aynı bildirim gitmişse tekrar göndermez."""
+    try:
+        r = requests.get(f"https://ntfy.sh/{NTFY_TOPIC}/json",
+                         params={"poll": "1", "since": "12h"}, timeout=10)
+        for line in r.text.splitlines():
+            try:
+                m = json.loads(line)
+            except ValueError:
+                continue
+            if m.get("event") == "message" and m.get("title") == title and m.get("message") == text:
+                return True
+    except requests.RequestException:
+        pass
+    return False
+
+
 def notify(title, text):
     """Telefona bildirim (ntfy.sh). Kanal adı yoksa hiçbir şey yapmaz."""
     if not NTFY_TOPIC:
+        return
+    if already_sent(title, text):
+        print("ntfy: aynı bildirim zaten gönderilmiş, atlandı.")
         return
     try:
         hdr = {"Title": title, "Priority": "high"}
