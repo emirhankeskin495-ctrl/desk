@@ -36,6 +36,9 @@ WATCH_N = 12             # Teknik analiz tablosunda kaç coin izlensin (hacme g�
 ADX_TREND = 25            # ADX bunun üstündeyse piyasa "trend", altındaysa "yatay" sayılır
 FWD = 6                   # Geçmiş sinyal istatistiği: sinyalden kaç saat sonrasına bakılsın
 CHART_N = 96              # Grafikte gösterilecek mum sayısı (1s)
+MAX_TOTAL_RISK_PCT = 1.5  # Açık önerilerin toplam riski hesabın en fazla bu %'si olabilir
+DAILY_LOSS_R = 3.0        # Son 24 saatte toplam kayıp bu kadar R'yi geçerse yeni öneri durur
+FEE_PCT = 0.1             # Backtest: her işlem yönü için komisyon (%)
 MIN_NOTIONAL = 5.0        # Bundan küçük pozisyonlar atlanır (Binance min ~5 USDT)
 
 HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"]
@@ -63,6 +66,7 @@ SITE = os.path.join(BASE, "site")
 FINAL = {"HEDEF", "STOP", "DOLMADI", "SÜRE DOLDU"}
 COOLDOWN_FILE = os.path.join(BASE, "cooldown.json")
 WATCHLIST_FILE = os.path.join(BASE, "watchlist.txt")
+ALERTS_FILE = os.path.join(BASE, "alerts.txt")
 _host = None
 
 
@@ -254,13 +258,20 @@ def score_at(j, S):
         regime = "TREND"
         v = {"EMA 20/50": ema_v, "MACD": macd_v, "Donchian": don_v, "OBV": obv_v}
         sc = sum(v.values())
-        sig = "AL" if sc >= 3 else ("SAT" if sc <= -3 else "BEKLE")
+        sig = "AL" if sc >= 3 else ("SAT" if sc <= -3 else
+                                    ("ZAYIF" if (sc == 2 and ema_v == 1) else "BEKLE"))
     else:
         regime = "YATAY"
         v = {"RSI": rsi_v, "Bollinger": bb_v, "OBV": obv_v}
         sc = sum(v.values())
-        sig = "AL" if (sc >= 2 and (rsi_v == 1 or bb_v == 1)) else \
-            ("SAT" if (sc <= -2 and (rsi_v == -1 or bb_v == -1)) else "BEKLE")
+        if sc >= 2 and (rsi_v == 1 or bb_v == 1):
+            sig = "AL"
+        elif sc <= -2 and (rsi_v == -1 or bb_v == -1):
+            sig = "SAT"
+        elif r < 40 and obv_v == 1:
+            sig = "ZAYIF"
+        else:
+            sig = "BEKLE"
     return sc, sig, regime, v
 
 
@@ -273,8 +284,65 @@ def _stat(flips, kind, c):
             "avg": round(100 * sum(xs) / len(xs), 2)}
 
 
+def backtest(k, S, res):
+    """Stratejiyi geçmişte oynatır: AL'a dönüşte sonraki mumun açılışından girer, stop/hedef/SAT/48 saat ile çıkar."""
+    L = len(k)
+    fee = FEE_PCT / 100
+    eq, ev, trades, busy = 1.0, {}, [], -1
+    for j in range(61, L - 1):
+        if j <= busy or res[j][1] != "AL" or res[j - 1][1] == "AL":
+            continue
+        a = atr(k[max(0, j - 60):j + 1])
+        entry = k[j + 1]["o"]
+        stop = entry - ATR_MULT * a
+        if stop <= 0 or entry <= stop:
+            continue
+        target = entry + RR_TARGET * (entry - stop)
+        xp = xi = None
+        for m in range(j + 1, min(L, j + 49)):
+            if k[m]["l"] <= stop:
+                xp, xi = stop, m
+                break
+            if k[m]["h"] >= target:
+                xp, xi = target, m
+                break
+            if res[m] and res[m][1] == "SAT":
+                xp, xi = k[m]["c"], m
+                break
+        if xp is None:
+            xi = min(L - 1, j + 48)
+            xp = k[xi]["c"]
+        net = xp / entry - 1 - 2 * fee
+        frac = min(RISK_PCT / 100 / ((entry - stop) / entry), MAX_POS_PCT / 100)
+        eq *= 1 + frac * net
+        trades.append(frac * net)
+        ev[xi] = eq
+        busy = xi
+    cur, curve = 1.0, []
+    for q in range(60, L):
+        cur = ev.get(q, cur)
+        curve.append(cur)
+    c0 = S["c"][60]
+    hold = [1 + MAX_POS_PCT / 100 * (S["c"][q] / c0 - 1) for q in range(60, L)]
+    peak, dd = 1.0, 0.0
+    for x in curve:
+        peak = max(peak, x)
+        dd = max(dd, 1 - x / peak)
+    gp = sum(x for x in trades if x > 0)
+    gl = -sum(x for x in trades if x < 0)
+    step = max(1, len(curve) // 80)
+    idx = list(range(0, len(curve), step))
+    if idx[-1] != len(curve) - 1:
+        idx.append(len(curve) - 1)
+    return dict(n=len(trades), win=round(100 * sum(1 for x in trades if x > 0) / len(trades)) if trades else 0,
+                ret=round(100 * (eq - 1), 2), bh=round(100 * (hold[-1] - 1), 2), dd=round(100 * dd, 2),
+                pf=round(gp / gl, 2) if gl else None, days=round((L - 60) / 24),
+                curve=[round(100 * (curve[q] - 1), 2) for q in idx],
+                bhc=[round(100 * (hold[q] - 1), 2) for q in idx])
+
+
 def analyze(sym, btc):
-    k = klines(sym, "1h", 500)
+    k = klines(sym, "1h", 1000)
     if len(k) < 120:
         return None
     S = build_series(k)
@@ -292,10 +360,10 @@ def analyze(sym, btc):
     trend4 = "YUKARI" if (c4[-1] > e50[-1] and e20[-1] > e50[-1]) else \
         ("AŞAĞI" if (c4[-1] < e50[-1] and e20[-1] < e50[-1]) else "YATAY")
     final, note = raw, ""
-    if raw == "AL" and trend4 == "AŞAĞI":
-        final, note = "BEKLE", "4 saatlik trend aşağı, AL iptal"
-    elif raw == "AL" and btc["weak"]:
-        final, note = "BEKLE", "BTC zayıf, AL iptal"
+    if raw in ("AL", "ZAYIF") and trend4 == "AŞAĞI":
+        final, note = "BEKLE", f"4 saatlik trend aşağı, {raw} iptal"
+    elif raw in ("AL", "ZAYIF") and btc["weak"]:
+        final, note = "BEKLE", f"BTC zayıf, {raw} iptal"
     price = S["c"][i]
     a = atr(k)
     stop = price - ATR_MULT * a
@@ -305,6 +373,7 @@ def analyze(sym, btc):
         sym=sym, price=r6(price), signal=final, raw=raw, score=sc, regime=regime,
         votes=votes, trend4=trend4, rsi=round(S["rsi"][i]), adx=round(S["adx"][i]),
         note=note, stop=r6(stop), target=r6(price + RR_TARGET * (price - stop)),
+        bt=backtest(k, S, res),
         stats={"al": _stat(flips, "AL", S["c"]), "sat": _stat(flips, "SAT", S["c"]),
                "days": round((L - 60) / 24)},
         chart=dict(t0=k[s0]["t"], t1=k[-1]["t"],
@@ -312,6 +381,30 @@ def analyze(sym, btc):
                    e20=rows(S["e20"]), e50=rows(S["e50"]), bu=rows(S["bu"]), bl=rows(S["bl"]),
                    rsi=[round(x, 1) for x in S["rsi"][s0:]], mh=rows(S["mh"]),
                    mk=[{"i": j - s0, "t": t} for j, t in flips if j >= s0]))
+
+
+# ---------------- piyasa duyarlılığı ----------------
+def sentiment():
+    """Korku/Açgözlülük endeksi, BTC fonlama oranı, BTC dominansı. Erişilemeyenler None kalır."""
+    out = {"fng": None, "fng_label": "", "funding": None, "dominance": None}
+    try:
+        d = requests.get("https://api.alternative.me/fng/?limit=1", timeout=10).json()["data"][0]
+        out["fng"], out["fng_label"] = int(d["value"]), d["value_classification"]
+    except Exception:
+        pass
+    try:
+        r = requests.get("https://fapi.binance.com/fapi/v1/premiumIndex",
+                         params={"symbol": "BTCUSDT"}, timeout=10)
+        if r.ok:
+            out["funding"] = round(float(r.json()["lastFundingRate"]) * 100, 4)
+    except Exception:
+        pass
+    try:
+        d = requests.get("https://api.coingecko.com/api/v3/global", timeout=10).json()["data"]
+        out["dominance"] = round(d["market_cap_percentage"]["btc"], 1)
+    except Exception:
+        pass
+    return out
 
 
 # ---------------- 0. piyasa rejimi ----------------
@@ -423,7 +516,7 @@ def plan(p):
 
 
 # ---------------- 4. RISK ----------------
-def risk_check(p, btc, cooldown):
+def risk_check(p, btc, cooldown, ctx=None):
     pl, nw = p["plan"], p["news"]
     if pl["stop_pct"] > MAX_STOP_PCT:
         return False, f"stop %{pl['stop_pct']:.1f} uzak (limit %{MAX_STOP_PCT})"
@@ -436,6 +529,12 @@ def risk_check(p, btc, cooldown):
     last = cooldown.get(p["sym"])
     if last and time.time() - last < COOLDOWN_H * 3600:
         return False, f"son {COOLDOWN_H} saatte zaten önerildi"
+    if ctx:
+        if ctx["day_r"] <= -DAILY_LOSS_R:
+            return False, f"günlük zarar limiti doldu ({ctx['day_r']:.1f}R)"
+        nr = size(pl["entry"], pl["stop"]) * (pl["entry"] - pl["stop"])
+        if ctx["open_risk"] + nr > ctx["limit"]:
+            return False, "toplam açık risk limiti dolu"
     return True, f"stop %{pl['stop_pct']:.1f}, ödül/risk {pl['rr']:.1f}"
 
 
@@ -462,6 +561,10 @@ def skeptic(p, btc, tech=None):
     rng = k[-1]["h"] - k[-1]["l"]
     if rng > 0 and (k[-1]["h"] - k[-1]["c"]) / rng > 0.5:
         why.append("son mumda uzun üst fitil (satış baskısı)")
+    if btc.get("fng") is not None and btc["fng"] >= 80:
+        why.append(f"piyasa aşırı açgözlü (Korku/Açgözlülük {btc['fng']})")
+    if btc.get("funding") is not None and btc["funding"] > 0.05:
+        why.append(f"BTC fonlama oranı yüksek (%{btc['funding']}), kalabalık alım")
     if btc["weak"]:
         why.append(f"BTC zayıf (4s %{btc['c4']:.1f}), altlar genelde onunla düşer")
     n = len(why)
@@ -500,6 +603,68 @@ def load_watchlist():
             if tok not in out:
                 out.append(tok)
     return out
+
+
+def load_alerts():
+    """alerts.txt: her satır 'PAXG > 4100' ya da 'SOL < 120'."""
+    out = []
+    try:
+        with open(ALERTS_FILE, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return out
+    for line in lines:
+        m = re.match(r"^\s*([A-Za-z0-9]+)\s*([<>])\s*([0-9]*\.?[0-9]+)", line)
+        if not m:
+            continue
+        sym = m.group(1).upper()
+        sym = sym if sym.endswith("USDT") else sym + "USDT"
+        out.append((sym, m.group(2), float(m.group(3))))
+    return out
+
+
+def check_alerts(cd):
+    st, res = cd.get("_alerts", {}), []
+    for sym, op, val in load_alerts():
+        key = f"{sym}{op}{val}"
+        try:
+            price = float(api("/api/v3/ticker/price", symbol=sym)["price"])
+        except Exception:
+            continue
+        hit = price > val if op == ">" else price < val
+        if hit and not st.get(key):
+            notify(f"Alarm: {sym[:-4]}", f"{sym} {op} {fmt(val)} oldu (fiyat {fmt(price)}).")
+        st[key] = hit
+        res.append(dict(sym=sym, op=op, val=val, price=r6(price), hit=hit))
+    cd["_alerts"] = st
+    return res
+
+
+def extras(snap, hist):
+    """Fiyat alarmları, günlük kontrol bildirimi ve haftalık özet."""
+    cd = load_cd()
+    now = datetime.datetime.now(datetime.timezone.utc)
+    snap["alerts"] = check_alerts(cd)
+    n_open = sum(1 for h in hist if h["status"] in ("BEKLİYOR", "AÇIK"))
+    hb = cd.get("_hb", {"rounds": 0, "signals": 0, "sent": ""})
+    hb["rounds"] += 1
+    hb["signals"] += snap.get("approved", 0)
+    today = f"{now:%Y-%m-%d}"
+    if now.hour >= 6 and hb.get("sent") != today:
+        notify("Gunluk kontrol", f"Sistem calisiyor. Son 24 saatte {hb['rounds']} tur, "
+                                 f"{hb['signals']} oneri. Acik oneri: {n_open}.")
+        hb = {"rounds": 0, "signals": 0, "sent": today}
+    cd["_hb"] = hb
+    wk = now.strftime("%G-W%V")
+    if now.weekday() == 6 and now.hour >= 17 and cd.get("_wk") != wk:
+        wkly = [h for h in hist if h["status"] in ("HEDEF", "STOP")
+                and time.time() - h.get("closed_ts", 0) < 7 * 86400]
+        w = sum(1 for h in wkly if h["status"] == "HEDEF")
+        l = len(wkly) - w
+        notify("Haftalik ozet", f"Bu hafta {len(wkly)} oneri kapandi: {w} hedef, {l} stop, "
+                                f"net {w * RR_TARGET - l:+g}R. Acik oneri: {n_open}.")
+        cd["_wk"] = wk
+    save_cd(cd)
 
 
 def load_cd():
@@ -570,22 +735,42 @@ def run_round():
     hist = load_json(HISTORY, [])
     for h in hist:
         if h.get("status") not in FINAL:
-            h["status"] = evaluate(h)
+            new = evaluate(h)
+            if new in FINAL:
+                h["closed_ts"] = time.time()
+            h["status"] = new
     save_json(HISTORY, hist)
-    snap = {"btc": None, "picks": [], "lead": "", "error": ""}
+    snap = {"btc": None, "picks": [], "lead": "", "error": "", "approved": 0}
+    err = None
     try:
         _round(snap, hist)
     except Exception as e:
+        err = e
         snap["error"] = str(e)[:200]
-        raise
-    finally:
-        write_site(snap, hist)
+    try:
+        extras(snap, hist)
+    except Exception as e:
+        print("ekstra hata:", e)
+    write_site(snap, hist)
+    if err:
+        raise err
 
 
 def _round(snap, hist):
     now = datetime.datetime.now()
     btc = btc_regime()
+    sent = sentiment()
+    btc.update(sent)
+    snap["sentiment"] = sent
     snap["btc"] = {"c4": round(btc["c4"], 2), "weak": btc["weak"]}
+    now_t = time.time()
+    active = [h for h in hist if h["status"] in ("BEKLİYOR", "AÇIK")]
+    ctx = {"open_risk": sum(h["qty"] * (h["entry"] - h["stop"]) for h in active),
+           "limit": ACCOUNT_USDT * MAX_TOTAL_RISK_PCT / 100,
+           "day_r": sum((RR_TARGET if h["status"] == "HEDEF" else -1) for h in hist
+                        if h["status"] in ("HEDEF", "STOP") and now_t - h.get("closed_ts", 0) < 86400)}
+    snap["risk_ctx"] = {"open_pct": round(100 * ctx["open_risk"] / ACCOUNT_USDT, 2),
+                        "limit_pct": MAX_TOTAL_RISK_PCT, "day_r": ctx["day_r"]}
     post("MARKET", f"{now:%Y-%m-%d %H:%M} | BTC 4s: {btc['c4']:+.1f}% "
                    f"{'(ZAYIF)' if btc['weak'] else ''}")
 
@@ -611,7 +796,7 @@ def _round(snap, hist):
             tech[s_]["pin"] = True
 
     def publish_watch():
-        order = {"AL": 0, "SAT": 1, "BEKLE": 2}
+        order = {"AL": 0, "ZAYIF": 1, "SAT": 2, "BEKLE": 3}
         pins = [tech[s_] for s_ in pinned if tech.get(s_)]
         ws = [t for t in tech.values() if t and not t.get("pin")]
         ws.sort(key=lambda t: (order[t["signal"]], -abs(t["score"])))
@@ -670,7 +855,7 @@ def _round(snap, hist):
 
     cd = load_cd()
     for p in picks:
-        p["risk"] = risk_check(p, btc, cd)
+        p["risk"] = risk_check(p, btc, cd, ctx)
     post("RISK", "\n".join(f"{p['sym']}: {'PASS' if p['risk'][0] else 'FAIL'} - {p['risk'][1]}"
                            for p in picks))
 
@@ -694,6 +879,12 @@ def _round(snap, hist):
                 p["note"] = f"pozisyon çok küçük ({notional:.1f} USDT)"
                 out.append(f"{p['sym']}: SKIP ({p['note']})")
                 continue
+            new_r = qty * (p["plan"]["entry"] - p["plan"]["stop"])
+            if ctx["open_risk"] + new_r > ctx["limit"]:
+                p["note"] = "toplam açık risk limiti dolu"
+                out.append(f"{p['sym']}: SKIP ({p['note']})")
+                continue
+            ctx["open_risk"] += new_r
             approved.append(p)
             p["decision"], p["qty"], p["notional"] = "AL", qty, notional
             pl = p["plan"]
@@ -724,6 +915,7 @@ def _round(snap, hist):
             risk_ok=p["risk"][0], risk_note=p["risk"][1], vote=p.get("vote", ""),
             why=p.get("why", []), decision=p["decision"], note=p.get("note", "")))
 
+    snap["approved"] = len(approved)
     if approved:
         notify("Kripto onerisi", "\n\n".join(o for o in out if o.startswith("AL")))
         for p in approved:
