@@ -129,16 +129,165 @@ a:focus-visible,summary:focus-visible,button:focus-visible{outline:2px solid #bc
 @media(min-width:900px){#app{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px;align-items:start}#app>h2{grid-column:1/-1}#app>.banner,#app>.stats,#app>details.alg{grid-column:1/-1}#app>.card.row,#app>h2+.mu{grid-column:1/-1}#app>details.coin{grid-column:span 1}#app>footer{grid-column:1/-1}}
 @media(max-width:640px){body{padding:14px 12px 32px}.topnav{top:7px;margin-bottom:22px;padding:11px 12px;font-size:9px}h1{font-size:30px}.card{padding:13px}.stats{gap:6px}.stats .card{padding:12px 9px}.stats b{font-size:21px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.grid div{padding:7px 6px}.grid b{font-size:12px}details.coin>summary{padding:14px}.cb{padding:0 12px 14px!important}table.wf{font-size:9px}table.wf td,table.wf th{padding:6px 3px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}body:before,body:after,.card,details.coin,details.coin>summary,.topnav{transition:none}}
+
+/* MarketPulse redesign — editorial terminal + functional glass asset island */
+:root{
+  color-scheme:dark;
+  --bg:#080e13;--card:#101a22;--card-2:#14212a;--tx:#edf4f5;--mu:#91a1a9;--bd:rgba(180,205,211,.14);
+  --ok:#9bdc82;--okb:rgba(42,83,50,.34);--bad:#f17c70;--badb:rgba(103,42,39,.38);--wt:#e9c47b;--wtb:rgba(93,71,34,.36);
+  --glass:rgba(13,25,32,.78);--accent:#a8d9c0;
+}
+html{background:var(--bg);scroll-padding-top:100px}
+body{padding:18px clamp(14px,3.2vw,52px) 150px;background:radial-gradient(ellipse at 76% -14%,rgba(88,151,124,.15),transparent 42%),linear-gradient(180deg,#0b151b 0%,#080e13 46%,#0d1216 100%);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.012em}
+body:before{opacity:.62}
+body:after{opacity:.48}
+main{max-width:1440px}
+.topnav{top:10px;margin-bottom:34px;padding:11px 16px;border-radius:13px;background:rgba(10,20,26,.78);border-color:rgba(191,219,216,.14);box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:10px;letter-spacing:.15em}
+.topnav a{gap:10px}
+.nav-context{color:#82959d;font-size:9px;letter-spacing:.18em}
+.desk-hero{position:relative;padding:22px 0 26px;border-bottom:1px solid rgba(185,210,212,.14);margin-bottom:24px}
+.desk-kicker{display:flex;align-items:center;gap:9px;color:#9cb8ad;font-size:9px;font-weight:800;letter-spacing:.2em}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#a6df88;box-shadow:0 0 12px rgba(166,223,136,.6)}
+.kicker-divider{color:#4e646a}
+.hero-line{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-top:15px}
+h1{margin:0;font-size:clamp(42px,6.2vw,76px);font-weight:620;letter-spacing:-.085em;line-height:.95}
+h1 span{color:#a8d9c0}
+.hero-copy{margin:12px 0 0;color:#a2b1b5;font-size:13px;letter-spacing:.005em}
+.hero-stamp{display:flex;align-items:end;gap:10px;padding-bottom:5px;color:#71858b}
+.hero-stamp span{font-size:9px;font-weight:800;letter-spacing:.2em}
+.hero-stamp b{font-size:32px;line-height:1;font-weight:500;letter-spacing:-.08em;color:rgba(206,228,222,.5)}
+.update-line{display:flex;align-items:center;gap:12px;margin-top:22px}
+.update-label{color:#71858b;font-size:8px;font-weight:800;letter-spacing:.18em}
+#upd{font-size:11px;color:#9aabae}
+h2{grid-column:1/-1;margin:30px 0 5px;padding:0 0 10px;border-bottom:1px solid rgba(185,210,212,.13);font-size:10px;letter-spacing:.18em;color:#b8c8c9}
+h2:before{width:9px;height:9px;border:1px solid #9bdc82;border-radius:50%;background:transparent}
+.sub{color:var(--mu)}
+#app{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;align-items:start}
+#app>h2{grid-column:1/-1}
+#app>.banner,#app>.stats,#app>details.alg,#app>h2+.mu,#app>footer{grid-column:1/-1}
+#app>.card.row,#app>.card:has(.mu),#app>h2+.card.row{grid-column:1/-1}
+#app>details.coin{grid-column:span 6;min-width:0}
+.card{margin:0;padding:17px 18px;border:1px solid var(--bd);border-radius:12px;background:linear-gradient(145deg,rgba(18,31,39,.96),rgba(13,23,30,.98));box-shadow:0 9px 26px rgba(0,0,0,.13)}
+.row{gap:12px}
+.sym{font-size:15px;font-weight:760;letter-spacing:-.02em}
+.mu{color:#9aaab0;font-size:12px;line-height:1.65}
+.chip{min-height:23px;padding:3px 8px;border-radius:6px;font-size:9px;letter-spacing:.08em}
+.ok{background:var(--okb);color:#b8e89f;border-color:rgba(155,220,130,.2)}
+.bad{background:var(--badb);color:#ff9b90;border-color:rgba(241,124,112,.22)}
+.wt{background:var(--wtb);color:#f0d08c;border-color:rgba(233,196,123,.2)}
+.grid{gap:7px;margin-top:12px}
+.grid div{padding:10px 11px;border:1px solid rgba(185,210,212,.09);border-radius:8px;background:rgba(5,12,16,.35)}
+.grid small{font-size:8px;letter-spacing:.14em}
+.grid b{font-size:15px}
+.banner{border-radius:10px}
+.stats{gap:10px}
+.stats .card{padding:17px 19px}
+.stats b{font-size:26px}
+details.coin{border-radius:12px}
+details.coin>summary{padding:16px 18px}
+details.coin>summary:after{right:17px}
+details.coin .cb{padding:0 18px 18px}
+details.coin[open]{border-color:rgba(168,217,192,.36);background:rgba(17,31,38,.98)}
+details.coin[open]>summary{background:rgba(169,217,192,.035)}
+details.coin[open][data-mood="AL"]{border-color:rgba(155,220,130,.58)}
+details.coin[open][data-mood="SAT"]{border-color:rgba(241,124,112,.58)}
+.votes{gap:6px}
+svg{margin-top:14px}
+table.wf{width:100%;font-size:11px}
+table.wf td,table.wf th{padding:8px 7px}
+footer{margin-top:30px;padding-top:16px;color:#7f9197;font-size:10px}
+a:focus-visible,summary:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #b9e5ca;outline-offset:3px}
+.skip-link{z-index:80}
+#asset-island{position:fixed;z-index:60;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(790px,calc(100vw - 34px));display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:9px 10px 9px 13px;border:1px solid rgba(211,235,229,.19);border-radius:19px;background:rgba(11,22,29,.78);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);box-shadow:0 18px 60px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.08)}
+.island-current{display:flex;align-items:center;gap:8px;min-width:90px;padding-right:11px;border-right:1px solid rgba(204,226,221,.13)}
+.island-current small{display:block;color:#82979b;font-size:7px;font-weight:800;letter-spacing:.16em}
+.island-current strong{display:block;color:#eff8f1;font-size:13px;line-height:1.3}
+.island-current .current-dot{width:7px;height:7px;border-radius:50%;background:#9bdc82;box-shadow:0 0 10px currentColor}
+#island-assets{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none;padding:1px}
+#island-assets::-webkit-scrollbar{display:none}
+.island-asset{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:#a8b9bc;font:inherit;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+.island-asset:hover{background:rgba(210,235,225,.07);color:#f1f7f2}
+.island-asset[aria-current="true"]{border-color:rgba(168,217,192,.24);background:rgba(168,217,192,.11);color:#eaf6ed}
+.island-asset b{font-size:10px;letter-spacing:.015em}
+.island-asset small{font-size:9px;color:#82979b;font-variant-numeric:tabular-nums}
+.island-manage{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid rgba(213,235,228,.15);border-radius:11px;background:rgba(215,237,227,.08);color:#dcebe3;font-size:10px;font-weight:750;white-space:nowrap;cursor:pointer}
+.island-manage:hover{background:rgba(215,237,227,.14)}
+#asset-picker{width:min(520px,calc(100vw - 28px));max-height:min(76vh,680px);padding:0;border:1px solid rgba(205,229,222,.18);border-radius:20px;background:rgba(12,23,30,.96);color:#edf4f5;box-shadow:0 28px 100px rgba(0,0,0,.6);backdrop-filter:blur(26px) saturate(150%)}
+#asset-picker::backdrop{background:rgba(2,7,10,.68);backdrop-filter:blur(5px)}
+.picker-head{display:flex;align-items:start;justify-content:space-between;gap:15px;padding:20px 20px 14px;border-bottom:1px solid rgba(190,215,210,.12)}
+.picker-head h2{margin:0;padding:0;border:0;font-size:14px;letter-spacing:-.02em;color:#eff6f2}
+.picker-head h2:before{display:none}
+.picker-head p{margin:5px 0 0;color:#8fa1a5;font-size:11px}
+.picker-close{width:32px;height:32px;border:1px solid rgba(205,229,222,.14);border-radius:10px;background:rgba(255,255,255,.05);color:#dce8e2;font-size:17px;cursor:pointer}
+.picker-search{padding:14px 20px 10px}
+.picker-search input{width:100%;padding:12px 13px;border:1px solid rgba(190,215,210,.16);border-radius:10px;background:rgba(3,10,14,.52);color:#eff6f2;font:inherit;font-size:13px}
+.picker-list{max-height:48vh;overflow:auto;padding:4px 12px 14px}
+.picker-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:4px}
+.picker-open{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:11px 12px;border:0;border-radius:10px;background:transparent;color:#e7f0eb;text-align:left;cursor:pointer}
+.picker-open:hover{background:rgba(190,225,210,.08)}
+.picker-open b{font-size:12px}
+.picker-open small{display:block;margin-top:2px;color:#82979b;font-size:10px}
+.picker-open .picker-price{color:#c4d3d1;font-variant-numeric:tabular-nums}
+.picker-pin{width:35px;height:35px;border:1px solid rgba(190,215,210,.12);border-radius:10px;background:rgba(255,255,255,.04);color:#81959a;font-size:15px;cursor:pointer}
+.picker-pin[aria-pressed="true"]{color:#e9c47b;border-color:rgba(233,196,123,.28);background:rgba(233,196,123,.09)}
+.picker-empty{padding:22px;text-align:center;color:#8fa1a5;font-size:12px}.picker-note{padding:0 20px 17px;color:#71868b;font-size:10px;line-height:1.5}
+@media(max-width:760px){
+  body{padding:12px 12px 136px}
+  .topnav{top:7px;margin-bottom:24px}
+  .desk-hero{padding:16px 0 20px;margin-bottom:18px}
+  h1{font-size:clamp(42px,12vw,58px)}
+  .hero-copy{font-size:12px}
+  .hero-stamp b{font-size:25px}
+  #app{grid-template-columns:minmax(0,1fr);gap:9px}
+  #app>details.coin{grid-column:1/-1}
+  #app>.card,#app>.banner,#app>.stats,#app>details.alg{grid-column:1/-1}
+  #asset-island{width:calc(100vw - 20px);bottom:calc(8px + env(safe-area-inset-bottom));grid-template-columns:auto minmax(0,1fr) auto;gap:7px;padding:8px;border-radius:16px}
+  .island-current{min-width:65px;gap:6px;padding-right:7px}
+  .island-current strong{font-size:11px}
+  .island-current small{font-size:6px}
+  .island-asset{padding:8px}
+  .island-asset small{display:none}
+  .island-manage{padding:9px 10px;font-size:0}
+  .island-manage:before{content:"＋";font-size:16px}
+  .island-manage span{display:none}
+  .picker-head{padding:17px}
+  .picker-search{padding:12px 17px 8px}
+}
+@media(max-width:380px){
+  #asset-island{grid-template-columns:auto minmax(0,1fr) auto}
+  .island-current{min-width:58px}
+  .island-asset{padding:7px 8px}
+}
+@media(prefers-reduced-motion:reduce){
+  #asset-island,.island-asset,.island-manage{transition:none}
+  html{scroll-behavior:auto}
+}
+
 </style>
 </head>
 <body>
 <a class="skip-link" href="#main-content">Ana içeriğe geç</a>
 <main id="main-content">
-<div class="topnav"><a href="./">← MarketPulse Desk</a><span>MARKETPULSE / CRYPTO</span></div><h1>Crypto Desk</h1>
-<div class="sub" id="upd" aria-live="polite">Yükleniyor…</div>
+<div class="topnav"><a href="./">← <span>MARKETPULSE</span></a><span class="nav-context">MARKET / CRYPTO</span></div>
+<header class="desk-hero">
+  <div class="desk-kicker"><span class="live-dot"></span> MARKET INTELLIGENCE <span class="kicker-divider">/</span> SPOT CRYPTO</div>
+  <div class="hero-line"><div><h1>Crypto <span>Desk</span></h1><p class="hero-copy">Piyasayı oku. Sinyali doğrula. Riski kontrol et.</p></div><div class="hero-stamp"><span>DESK</span><b>01</b></div></div>
+  <div class="update-line"><span class="update-label">VERİ DURUMU</span><span class="sub" id="upd" aria-live="polite">Yükleniyor…</span></div>
+</header>
 <div id="app"></div>
 <footer>Sadece öneri, yatırım tavsiyesi değildir. Sonuçlar simülasyondur: komisyon (yön başına %0,1) ve kayma hesaba katılır. Limit giriş için fiyatın limitin altına inmesi gerekir, dolum mumunda hedef sayılmaz, stop ve hedef aynı mumdaysa stop sayılır. Geçmiş sonuç geleceği garanti etmez.</footer>
 </main>
+
+<nav id="asset-island" aria-label="Varlıklar arasında geçiş">
+  <div class="island-current"><span class="current-dot" aria-hidden="true"></span><div><small>SEÇİLİ VARLIK</small><strong id="island-current-symbol">—</strong></div></div>
+  <div id="island-assets" aria-label="Hızlı varlık seçimi"><span class="mu">Varlıklar yükleniyor…</span></div>
+  <button class="island-manage" id="open-asset-picker" type="button" aria-haspopup="dialog" aria-controls="asset-picker"><span>Varlıkları yönet</span></button>
+</nav>
+<dialog id="asset-picker" aria-labelledby="picker-title">
+  <div class="picker-head"><div><h2 id="picker-title">Varlık seç</h2><p>Takip listenizdeki analizlere hızlıca geçin.</p></div><button class="picker-close" id="close-asset-picker" type="button" aria-label="Kapat">×</button></div>
+  <div class="picker-search"><input id="asset-search" type="search" placeholder="Coin veya sembol ara…" autocomplete="off" aria-label="Varlık ara"></div>
+  <div class="picker-list" id="asset-picker-list"></div><p class="picker-note">★ ile favorilerinizi sabitleyin. Favoriler bu cihazda saklanır; yeni coinlerin analiz listesine eklenmesi veri kaynağında ayrıca yapılmalıdır.</p>
+</dialog>
 <script>
 var TFL="1 saatlik",HTFL="4 saatlik",HTFS="4s";
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -265,6 +414,85 @@ function coinBody(t,d){
     lv.push({v:x.entry,t:"giriş",col:"#3b82f6"},{v:x.stop,t:"stop",col:"#ef4444"},{v:x.target,t:"hedef",col:"#22c55e"})}});
   return h+chart(t.chart,lv)+(t.bt?btText(t.bt):'')+wfText(t.wf);
 }
+
+function mountAssetIsland(items){
+  var dock=document.getElementById("island-assets");
+  var dialog=document.getElementById("asset-picker");
+  var list=document.getElementById("asset-picker-list");
+  var search=document.getElementById("asset-search");
+  var current=document.getElementById("island-current-symbol");
+  if(!dock||!dialog||!list||!search||!current)return;
+  var selected=0, query="";
+  var pinKey="marketpulse.assetPins.v1";
+  function readPins(){try{return JSON.parse(localStorage.getItem(pinKey)||"[]")}catch(e){return[]}}
+  function writePins(p){try{localStorage.setItem(pinKey,JSON.stringify(p))}catch(e){}}
+  function symbol(item){return String(item.sym||"").replace(/USDT$/,"")}
+  function signal(item){return String(item.signal||"BEKLE").toUpperCase()}
+  function tone(item){var s=signal(item);return s==="AL"?"var(--ok)":s==="SAT"?"var(--bad)":"var(--wt)"}
+  function cardAt(i){return document.querySelector('details.coin[data-i="'+i+'"]')}
+  function activate(i){
+    var item=items[i];if(!item)return;
+    selected=i;current.textContent=symbol(item);
+    var card=cardAt(i);
+    if(card){
+      card.open=true;
+      card.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});
+      var s=signal(item),root=document.documentElement;
+      root.dataset.marketMood=s;
+      root.style.setProperty("--signal-green",s==="AL"?"1":"0");
+      root.style.setProperty("--signal-red",s==="SAT"?"1":"0");
+      card.dataset.mood=s;
+    }
+    renderDock();renderPicker();
+    if(dialog.open)dialog.close();
+  }
+  function renderDock(){
+    var pins=readPins();
+    var visible=items.map(function(item,i){return {item:item,index:i}}).filter(function(x){return pins.includes(x.item.sym)}).concat(
+      items.map(function(item,i){return {item:item,index:i}}).filter(function(x){return !pins.includes(x.item.sym)})
+    ).slice(0,7);
+    if(!visible.length){dock.innerHTML='<span class="mu">Henüz varlık yok.</span>';return}
+    dock.innerHTML=visible.map(function(x){
+      return '<button type="button" class="island-asset" data-asset-open="'+x.index+'" aria-current="'+(selected===x.index?'true':'false')+'"><b>'+esc(symbol(x.item))+'</b><small>'+fm(x.item.price)+'</small></button>';
+    }).join("");
+  }
+  function renderPicker(){
+    var pins=readPins();
+    var rows=items.map(function(item,i){return {item:item,index:i}}).filter(function(x){
+      var q=query.toLocaleLowerCase("tr");
+      return symbol(x.item).toLocaleLowerCase("tr").includes(q)||String(x.item.sym).toLocaleLowerCase("tr").includes(q);
+    }).sort(function(a,b){
+      var ap=pins.includes(a.item.sym)?0:1,bp=pins.includes(b.item.sym)?0:1;
+      return ap-bp||a.index-b.index;
+    });
+    list.innerHTML=rows.length?rows.map(function(x){
+      var pinned=pins.includes(x.item.sym);
+      return '<div class="picker-row"><button type="button" class="picker-open" data-asset-open="'+x.index+'"><span><b>'+esc(symbol(x.item))+'</b><small>'+esc(signal(x.item))+' · '+esc(x.item.regime||"")+'</small></span><span class="picker-price">'+fm(x.item.price)+'</span></button><button type="button" class="picker-pin" data-asset-pin="'+x.index+'" aria-label="'+(pinned?"Favorilerden çıkar":"Favorilere ekle")+'" aria-pressed="'+pinned+'">★</button></div>';
+    }).join(""):'<div class="picker-empty">Bu aramayla eşleşen varlık bulunamadı.</div>';
+  }
+  dock.addEventListener("click",function(e){
+    var b=e.target.closest("[data-asset-open]");if(b)activate(+b.dataset.assetOpen);
+  });
+  list.addEventListener("click",function(e){
+    var open=e.target.closest("[data-asset-open]");
+    if(open){activate(+open.dataset.assetOpen);return}
+    var pin=e.target.closest("[data-asset-pin]");
+    if(pin){
+      var item=items[+pin.dataset.assetPin];if(!item)return;
+      var pins=readPins(),at=pins.indexOf(item.sym);
+      if(at>=0)pins.splice(at,1);else pins.push(item.sym);
+      writePins(pins);renderDock();renderPicker();
+    }
+  });
+  search.addEventListener("input",function(){query=search.value.trim();renderPicker()});
+  document.getElementById("open-asset-picker").addEventListener("click",function(){
+    query="";search.value="";renderPicker();dialog.showModal();search.focus();
+  });
+  document.getElementById("close-asset-picker").addEventListener("click",function(){dialog.close()});
+  dialog.addEventListener("click",function(e){if(e.target===dialog)dialog.close()});
+  if(items.length){current.textContent=symbol(items[0]);renderDock();renderPicker()}else{current.textContent="—";dock.innerHTML='<span class="mu">Varlık verisi yok</span>'}
+}
+
 fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(function(d){
   if(d.tf){TFL=d.tf.label;HTFL=d.tf.hlabel;HTFS=d.tf.tf==="15m"?"1s":"4s"}
   var age=Date.now()-new Date(d.updated).getTime();
@@ -315,6 +543,7 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   '<li><b>Duyarlılık:</b> Korku/Açgözlülük 80 ve üstü ya da BTC fonlama oranı %0,05 üstü olursa şüpheci bot itiraz eder. Veriye ulaşılamazsa atlanır.</li>'+
   '<li><b>Simülasyon kuralları:</b> Backtest girişi sinyalin ertesi mumunun açılışıdır (+kayma). Canlı limit önerilerinde fiyat limitin altına inmeden dolum sayılmaz, dolum mumunda hedef sayılmaz, stop ve hedef aynı mumdaysa stop. Üst zaman dilimi mumları ancak kapandıktan sonra kullanılır. Backtest’te BTC filtresi yoktur, spot işlemde fonlama maliyeti olmaz.</li></ul></details>';
   document.getElementById("app").innerHTML=h;
+  mountAssetIsland(w);
   Array.prototype.forEach.call(document.querySelectorAll("details.coin"),function(el){
     el.addEventListener("toggle",function(){
       if(el.open&&!el.dataset.done){el.dataset.done=1;el.querySelector(".cb").innerHTML=coinBody(w[+el.dataset.i],d)}
