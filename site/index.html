@@ -2,67 +2,187 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>MarketPulse Desk</title>
+<title>MarketPulse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b1714">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-:root{color-scheme:dark;--bg:#080d12;--surface:#101a20;--surface-2:#142129;--line:#273a3c;--text:#edf5f0;--muted:#91a49c;--green:#9bdc82;--red:#ef7668;--gold:#e9c47b;--scroll-green:.18;--scroll-red:.02}
+:root{color-scheme:light dark;--bg:#f6f7f8;--card:#fff;--tx:#171a1d;--mu:#5f6870;--bd:#dfe3e6;--bd2:#c5ccd1;--ok:#17794a;--okb:#e1f2e9;--bad:#b73a2d;--badb:#f7e3e0;--wt:#8a5b00;--wtb:#f6ead0;--nt:#3a4249;--ntb:#e8ebed;--blue:#2f5fc4;--amber:#a86a00;--violet:#7a55c7;--focus:#2f5fc4;--glass:rgba(255,255,255,.55);--glass-strong:rgba(255,255,255,.82);--glass-act:rgba(255,255,255,.9);--glass-bd:rgba(255,255,255,.75);--glass-hi:rgba(255,255,255,.95);--glass-sh:rgba(30,40,50,.16);--tint1:rgba(47,95,196,.13);--tint2:rgba(23,121,74,.10)}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1113;--card:#161a1d;--tx:#e7eaec;--mu:#8f99a1;--bd:#262c31;--bd2:#38414a;--ok:#5cbf8d;--okb:rgba(92,191,141,.14);--bad:#ee7b6c;--badb:rgba(238,123,108,.14);--wt:#dcae5a;--wtb:rgba(220,174,90,.14);--nt:#c3cad0;--ntb:#21272c;--blue:#7ea4f0;--amber:#dcae5a;--violet:#b49af0;--focus:#8fb2f5;--glass:rgba(40,47,54,.5);--glass-strong:rgba(26,31,36,.84);--glass-act:rgba(255,255,255,.14);--glass-bd:rgba(255,255,255,.14);--glass-hi:rgba(255,255,255,.2);--glass-sh:rgba(0,0,0,.5);--tint1:rgba(126,164,240,.14);--tint2:rgba(92,191,141,.10)}}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;background:var(--bg);scrollbar-color:#40544b #0a1115}
-body{position:relative;isolation:isolate;min-height:100vh;margin:0;padding:24px clamp(18px,4vw,64px) 48px;background:linear-gradient(180deg,#10251b 0%,#0b1714 34%,#111615 68%,#241613 100%);color:var(--text);font:15px/1.6 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(155deg,rgba(112,202,113,var(--scroll-green)),rgba(211,76,66,var(--scroll-red)));transition:background .2s ease}
-body:after{content:"";position:fixed;z-index:0;pointer-events:none;width:70vw;height:70vw;max-width:900px;max-height:900px;top:-38vw;right:-18vw;border-radius:50%;background:radial-gradient(circle,rgba(119,190,133,.13),transparent 68%)}
-main{position:relative;z-index:1;max-width:1320px;margin:0 auto}
-.bar{position:sticky;top:12px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:64px;padding:10px 18px;border:1px solid rgba(207,236,219,.16);border-radius:16px;background:rgba(13,24,25,.72);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);box-shadow:0 12px 36px rgba(0,0,0,.18)}
-.brand{font-size:13px;font-weight:850;letter-spacing:.14em}.brand span{color:var(--green)}
-.status{display:flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid rgba(207,236,219,.13);border-radius:999px;color:#b6c8bd;font-size:11px;letter-spacing:.09em;text-transform:uppercase}
-.status:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(155,220,130,.7)}
-.hero{max-width:820px;padding:clamp(72px,11vw,142px) 0 72px}
-.eyebrow{display:flex;align-items:center;gap:12px;color:#a7d7a4;font-size:10px;font-weight:800;letter-spacing:.22em;text-transform:uppercase}
-.eyebrow:before{content:"";width:28px;height:1px;background:currentColor}
-.hero h1{max-width:850px;margin:20px 0 22px;font-size:clamp(54px,9vw,112px);line-height:.92;letter-spacing:-.085em;font-weight:650;text-wrap:balance}
-.hero h1 span{color:#9bdc82}
-.hero p{max-width:590px;margin:0;color:#aab9b1;font-size:clamp(15px,1.6vw,18px);line-height:1.75}
-.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:12px 0 18px;padding-bottom:14px;border-bottom:1px solid rgba(211,235,220,.15)}
-.sectionhead h2{margin:0;font-size:13px;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
-.sectionhead small{color:var(--muted);font-size:12px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.asset{position:relative;isolation:isolate;display:flex;flex-direction:column;min-height:250px;overflow:hidden;padding:26px 28px;border:1px solid rgba(210,235,220,.14);border-radius:8px;background:linear-gradient(145deg,rgba(20,34,37,.96),rgba(12,22,25,.98) 72%);color:inherit;text-decoration:none;transition:transform .22s ease,border-color .22s ease,background-color .22s ease}
-.asset:before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;background:linear-gradient(125deg,rgba(147,213,140,.1),transparent 55%);transition:opacity .22s ease}
-.asset:hover{transform:translateY(-3px);border-color:rgba(165,218,157,.5)}
-.asset:hover:before{opacity:1}
-.asset.primary{border-color:rgba(145,211,133,.45);background:linear-gradient(130deg,rgba(25,58,43,.96),rgba(12,26,26,.98) 76%)}
-.asset.primary:after{content:"";position:absolute;right:-55px;bottom:-100px;width:260px;height:260px;border:1px solid rgba(160,221,142,.18);border-radius:50%;box-shadow:0 0 0 28px rgba(160,221,142,.025),0 0 0 58px rgba(160,221,142,.02);pointer-events:none}
-.assethead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.icon{display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(219,240,225,.17);border-radius:10px;background:rgba(220,245,227,.06);color:#d5e8d8;font-size:20px}
-.tag{color:#a9dc9c;font-size:10px;font-weight:800;letter-spacing:.16em}
-.soon{color:#d6bd83}
-.asset h3{margin:34px 0 8px;font-size:clamp(23px,3vw,30px);font-weight:650;letter-spacing:-.045em}
-.asset p{max-width:460px;margin:0;color:#9aada4;font-size:13px;line-height:1.7}
-.enter{margin-top:auto;padding-top:24px;color:#b7e5a8;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
-.enter span{display:inline-block;margin-left:7px;transition:transform .2s ease}
-.asset:hover .enter span{transform:translate(3px,-3px)}
-.disabled{opacity:.58;cursor:not-allowed}
-.disabled:hover{transform:none;border-color:rgba(210,235,220,.14)}
-.disabled:hover:before{opacity:0}
-.disabled .enter{color:#b9aa84}
-.foot{margin-top:34px;padding-top:18px;border-top:1px solid rgba(211,235,220,.13);color:#82968c;font-size:11px;letter-spacing:.02em}
-a:focus-visible{outline:2px solid #c2f0ad;outline-offset:4px}.skip-link{position:fixed;top:8px;left:8px;z-index:30;padding:10px 14px;transform:translateY(-160%);border:1px solid #c2f0ad;border-radius:5px;background:#10251b;color:#fff}.skip-link:focus{transform:translateY(0)}
-@media(max-width:680px){body{padding:14px 14px 30px}.bar{top:8px;min-height:56px;padding:8px 12px}.hero{padding:74px 0 54px}.grid{grid-template-columns:1fr}.asset{min-height:215px;padding:22px}.sectionhead{align-items:start;flex-direction:column;gap:5px}.status{font-size:9px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
+html{background:var(--bg);scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;color:var(--tx);font:15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+main{max-width:900px;margin:0 auto;padding:clamp(28px,6vw,64px) clamp(16px,4vw,40px) 130px}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+.skip-link{position:fixed;top:8px;left:8px;z-index:100;padding:8px 12px;border-radius:6px;background:var(--tx);color:var(--bg);transform:translateY(-200%)}.skip-link:focus{transform:none}
+.brand{font-weight:600;font-size:15px}
+.hero{margin:28px 0 40px}
+.hero-top{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 16px}
+.hero small{display:block;color:var(--mu);font-size:13px}
+#hp{font-size:clamp(40px,9vw,68px);line-height:1.05;font-weight:600;letter-spacing:-.03em;transition:color .6s}
+#hp.fu{color:var(--ok)}#hp.fd{color:var(--bad)}
+#hc{font-size:18px;font-weight:500}
+.up{color:var(--ok)}.dn{color:var(--bad)}.na{color:var(--mu)}
+.hc{position:relative;height:clamp(170px,32vw,260px);margin-top:18px;color:var(--ok);touch-action:pan-y;cursor:crosshair}
+.hc.neg{color:var(--bad)}
+.hc svg{display:block;width:100%;height:100%;overflow:visible}
+.hc .xh{position:absolute;top:0;bottom:0;width:1px;background:currentColor;opacity:.35;pointer-events:none;display:none}
+.hc .dt{position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 25%,transparent);pointer-events:none;display:none}
+.hc .tip{position:absolute;top:0;padding:6px 12px;border-radius:14px;background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);box-shadow:0 0 0 1px var(--glass-bd),0 8px 20px var(--glass-sh),inset 0 1px 0 var(--glass-hi);color:var(--tx);font-size:13px;white-space:nowrap;pointer-events:none;display:none;transform:translateX(-50%)}
+.hc.on .xh,.hc.on .dt,.hc.on .tip{display:block}
+.hc .pulse{position:absolute;right:0;width:9px;height:9px;margin:-4.5px -4.5px 0 0;border-radius:50%;background:currentColor;animation:pl 2.2s ease-out infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 45%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+@media(prefers-reduced-motion:reduce){.hc .pulse{animation:none}html{scroll-behavior:auto}}
+h2{margin:0;font-size:16px;font-weight:600}
+.sec{margin:0 0 36px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 10px}
+.sec-h span{color:var(--mu);font-size:13px}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:12px}
+.mk{padding:4px 8px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+th,td{padding:10px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--bd)}
+tr:last-child td{border-bottom:0}
+th{color:var(--mu);font-size:12px;font-weight:500}
+th:first-child,td:first-child{text-align:left}td:first-child{font-weight:600}
+.dot{display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--ok)}.off .dot{background:var(--mu)}
+.ind{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin:10px 0 0;overflow:hidden}
+.ind div{padding:14px 16px;border-right:1px solid var(--bd);margin-right:-1px}
+.ind dt{color:var(--mu);font-size:13px}.ind dd{margin:2px 0 0;font-size:22px;font-weight:600;letter-spacing:-.01em}.ind dd.sm{font-size:12px;font-weight:400;color:var(--mu);letter-spacing:0}
+ul{margin:0;padding:0;list-style:none}li{margin:0 0 10px}
+.desk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 24px;align-items:center;padding:18px 20px;color:inherit;text-decoration:none;border-radius:12px}
+.desk h3{margin:0;font-size:18px;font-weight:600}
+.desk p{margin:2px 0 0;max-width:60ch;color:var(--mu);font-size:14px}
+.status{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;background:var(--ntb);color:var(--mu);font-size:12px;font-weight:500;white-space:nowrap}
+.live .status{background:var(--okb);color:var(--ok)}
+.soon{opacity:.7}
+#live{grid-column:1/-1;margin:6px 0 0;color:var(--tx);font-size:13px}
+a.desk:hover{background:var(--ntb)}
+footer{color:var(--mu);font-size:12px;max-width:62ch}
+#desk-tab-island{--island-w:440px;--cols:4}
+@media(max-width:560px){.desk{grid-template-columns:1fr}.status{justify-self:start;grid-row:1}}
+@property --mx{syntax:"<length-percentage>";inherits:true;initial-value:50%}
+@property --my{syntax:"<length-percentage>";inherits:true;initial-value:0%}
+@property --sz{syntax:"<length>";inherits:true;initial-value:440px}
+@property --sa{syntax:"<number>";inherits:true;initial-value:.14}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(70vmax 50vmax at 90% -10%,var(--tint1),transparent 62%),radial-gradient(60vmax 50vmax at -10% 55%,var(--tint2),transparent 62%)}
+#desk-tab-island{position:fixed;left:0;right:0;margin:0 auto;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;width:min(var(--island-w,520px),calc(100vw - 24px));display:grid;grid-template-columns:repeat(var(--cols,5),minmax(0,1fr));gap:4px;padding:6px;border-radius:30px;background:color-mix(in srgb,var(--tintm,transparent) 18%,var(--glass));-webkit-backdrop-filter:blur(18px) saturate(190%);backdrop-filter:blur(18px) saturate(190%);box-shadow:0 0 0 1px var(--glass-bd),0 16px 40px var(--glass-sh),inset 0 1px 0 var(--glass-hi),inset 0 -1px 1px rgba(0,0,0,.08);transition:background-color .5s,--mx .9s cubic-bezier(.2,.7,.2,1),--my .9s cubic-bezier(.2,.7,.2,1),--sz .9s cubic-bezier(.2,.7,.2,1),--sa .9s ease-out;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+#desk-tab-island.touch{--sz:120px;--sa:.34;transition:background-color .5s,--sz .18s ease-out,--sa .18s ease-out}
+html.refract #desk-tab-island{-webkit-backdrop-filter:url(#lg) blur(1px) saturate(190%) brightness(1.05);backdrop-filter:url(#lg) blur(1px) saturate(190%) brightness(1.05)}
+#desk-tab-island::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.2),transparent 45%),radial-gradient(var(--sz) calc(var(--sz)*.6) at var(--mx) var(--my),rgba(255,255,255,var(--sa)),transparent 70%);pointer-events:none}
+.pill{position:absolute;top:6px;bottom:6px;left:0;width:0;border-radius:24px;background:var(--glass-act);box-shadow:inset 0 1px 0 var(--glass-hi),0 2px 10px var(--glass-sh);will-change:transform;transition:transform .42s cubic-bezier(.3,1.2,.5,1);pointer-events:none}
+.desk-tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:54px;padding:0 2px;border:0;border-radius:24px;background:none;color:var(--mu);font:inherit;font-size:11px;font-weight:500;text-decoration:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:color .2s}
+@media(hover:hover){.desk-tab:hover{color:var(--tx)}}
+.desk-tab[aria-current=page]{color:var(--tx)}
+.desk-tab svg{width:22px;height:22px;margin:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+html[data-mood=AL]{--tintm:var(--ok)}html[data-mood=SAT]{--tintm:var(--bad)}
+@media(prefers-reduced-motion:reduce){.pill,#desk-tab-island{transition:none}}
+@media(prefers-reduced-transparency:reduce){:root{--glass:var(--card);--glass-strong:var(--card);--glass-act:var(--ntb)}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){:root{--glass:var(--card);--glass-strong:var(--card)}}
 </style>
 </head>
-<body><a class="skip-link" href="#main-content">Ana içeriğe geç</a><main id="main-content">
-<header class="bar"><div class="brand">MARKETPULSE <span>DESK</span></div><div class="status">ANALİZ PLATFORMU</div></header>
-<section class="hero"><div class="eyebrow">PİYASALARI TEK MERKEZDEN TAKİP ET</div><h1>MarketPulse<br><span>Desk.</span></h1><p>Farklı varlık sınıfları için analiz masalarına buradan ulaş. Her masa kendi piyasa verilerini ve analiz araçlarını sunar.</p></section>
-<div class="sectionhead"><h2>Analiz masaları</h2><small>Bir varlık sınıfı seçerek devam et</small></div>
-<section class="grid">
-<a class="asset primary" href="crypto.html"><div class="assethead"><div class="icon" aria-hidden="true">₿</div><span class="tag">CANLI MASA</span></div><h3>Crypto Desk</h3><p>Kripto piyasası taraması, teknik göstergeler, sinyaller, risk kontrolleri ve performans doğrulaması.</p><div class="enter">Masaya gir <span aria-hidden="true">↗</span></div></a>
-<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon" aria-hidden="true">↗</div><span class="tag soon">YAKINDA</span></div><h3>Equity Desk</h3><p>Hisse senetleri ve endeksler için analiz alanı. Veri kaynağı ve doğrulama altyapısı hazırlanıyor.</p><div class="enter">Henüz kullanıma açık değil</div></div>
-<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon" aria-hidden="true">⇄</div><span class="tag soon">YAKINDA</span></div><h3>FX Desk</h3><p>Döviz çiftleri, majör pariteler ve kur hareketleri için ayrı analiz alanı.</p><div class="enter">Henüz kullanıma açık değil</div></div>
-<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon" aria-hidden="true">◈</div><span class="tag soon">YAKINDA</span></div><h3>Commodities Desk</h3><p>Altın, gümüş, enerji ve diğer emtialar için piyasa izleme ve analiz alanı.</p><div class="enter">Henüz kullanıma açık değil</div></div>
+<body>
+<a class="skip-link" href="#main-content">Ana içeriğe geç</a>
+<main id="main-content">
+<div class="brand">MarketPulse</div>
+<section class="hero" id="top" aria-label="Bitcoin fiyatı">
+<small>Binance BTC/USDT, son 48 saat</small>
+<div class="hero-top"><span id="hp" aria-live="off">-</span><span id="hc"></span></div>
+<div class="hc" id="chart" aria-label="Fiyat grafiği"></div>
 </section>
-<footer class="foot">MarketPulse Desk · Analiz ve karar destek platformu. İçerikler yatırım tavsiyesi değildir.</footer>
-</main><script>
-(function(){var root=document.documentElement,raf=false;function paint(){var max=Math.max(1,document.documentElement.scrollHeight-innerHeight),p=Math.min(1,Math.max(0,scrollY/max));root.style.setProperty('--scroll-green',(0.18*(1-p)+0.015).toFixed(3));root.style.setProperty('--scroll-red',(0.19*p+0.012).toFixed(3));raf=false}addEventListener('scroll',function(){if(!raf){raf=true;requestAnimationFrame(paint)}},{passive:true});addEventListener('resize',paint);paint()})();
-</script></body></html>
+<section class="sec" id="ex" aria-labelledby="h-ex">
+<div class="sec-h"><h2 id="h-ex">Borsalar</h2><span id="mk-time" aria-live="polite">Yükleniyor</span></div>
+<div class="box mk"><table><thead><tr><th>Borsa</th><th>BTC</th><th>24 saat</th><th>ETH</th><th>24 saat</th><th>Durum</th></tr></thead><tbody id="ex-body"><tr><td colspan="6" class="na">Borsa verileri yükleniyor…</td></tr></tbody></table></div>
+<dl class="box ind"><div><dt>BTC borsalar arası fark</dt><dd id="spread">-</dd><dd class="sm">USD ve USDT çiftleri dahil</dd></div><div><dt>Korku/Açgözlülük</dt><dd id="fng">-</dd><dd class="sm" id="fng-l"></dd></div><div><dt>BTC dominansı</dt><dd id="dom">-</dd></div><div><dt>Toplam piyasa değeri</dt><dd id="cap">-</dd><dd class="sm" id="cap-l"></dd></div></dl>
+</section>
+<section class="sec" id="desks" aria-labelledby="h-desk">
+<div class="sec-h"><h2 id="h-desk">Analiz masaları</h2></div>
+<ul>
+<li class="box live"><a class="desk" href="crypto.html"><div><h3>Crypto Desk</h3><p>Binance spot piyasası: hacim taraması, teknik göstergeler, sinyaller, risk kontrolleri ve canlı doğrulama.</p></div><span class="status">Açık</span><p id="live" aria-live="polite"></p></a></li>
+<li class="box soon"><div class="desk"><div><h3>Equity Desk</h3><p>Hisse senetleri ve endeksler. Veri kaynağı hazırlanıyor.</p></div><span class="status">Yakında</span></div></li>
+<li class="box soon"><div class="desk"><div><h3>FX Desk</h3><p>Majör pariteler ve kur hareketleri.</p></div><span class="status">Yakında</span></div></li>
+<li class="box soon"><div class="desk"><div><h3>Commodities Desk</h3><p>Altın, gümüş ve enerji.</p></div><span class="status">Yakında</span></div></li>
+</ul>
+</section>
+<footer>İçerikler yatırım tavsiyesi değildir. Fiyatlar borsaların herkese açık verisinden tarayıcıda çekilir; bir borsaya ulaşılamazsa satırı boş kalır.</footer>
+</main>
+<nav id="desk-tab-island" aria-label="Sayfa bölümleri"><a class="desk-tab" href="#top" data-s="top" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span>Piyasa</span></a><a class="desk-tab" href="#ex" data-s="ex"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg><span>Borsalar</span></a><a class="desk-tab" href="#desks" data-s="desks"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Masalar</span></a><a class="desk-tab" href="crypto.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg><span>Crypto</span></a></nav>
+<script>
+var $=function(i){return document.getElementById(i)};
+function j(u){var c=new AbortController(),t=setTimeout(function(){c.abort()},8000);return fetch(u,{signal:c.signal}).then(function(r){clearTimeout(t);if(!r.ok)throw new Error(r.status);return r.json()})}
+var EX=[
+ {n:"Binance",g:function(s){return j("https://data-api.binance.vision/api/v3/ticker/24hr?symbol="+s+"USDT").then(function(d){return{p:+d.lastPrice,c:+d.priceChangePercent}})}},
+ {n:"Coinbase",g:function(s){return j("https://api.exchange.coinbase.com/products/"+s+"-USD/stats").then(function(d){return{p:+d.last,c:(d.last/d.open-1)*100}})}},
+ {n:"OKX",g:function(s){return j("https://www.okx.com/api/v5/market/ticker?instId="+s+"-USDT").then(function(r){var d=r.data[0];return{p:+d.last,c:(d.last/d.open24h-1)*100}})}},
+ {n:"Bybit",g:function(s){return j("https://api.bybit.com/v5/market/tickers?category=spot&symbol="+s+"USDT").then(function(r){var d=r.result.list[0];return{p:+d.lastPrice,c:+d.price24hPcnt*100}})}}
+];
+var NF=new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}),TF=new Intl.DateTimeFormat("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+function pr(x){return NF.format(x)}
+function pc(x){return '<span class="'+(x>=0?"up":"dn")+'">'+(x>=0?"+":"")+x.toFixed(2).replace(".",",")+'%</span>'}
+function cell(r){return r.status==="fulfilled"&&isFinite(r.value.p)?[pr(r.value.p),pc(r.value.c)]:['<span class="na">-</span>','<span class="na">-</span>']}
+var last=null;
+function setHero(p,c){var el=$("hp");if(last!=null&&p!==last){el.className=p>last?"fu":"fd";setTimeout(function(){el.className=""},900)}last=p;el.textContent=pr(p);$("hc").innerHTML=pc(c)+' <span class="na" style="font-size:14px;font-weight:400">24 saat</span>'}
+function loadMarket(){
+ Promise.all(EX.map(function(e){return Promise.allSettled([e.g("BTC"),e.g("ETH")])})).then(function(all){
+  var btc=[],rows=all.map(function(r,i){var a=cell(r[0]),b=cell(r[1]),ok=r[0].status==="fulfilled"||r[1].status==="fulfilled";
+   if(r[0].status==="fulfilled")btc.push(r[0].value.p);
+   return '<tr class="'+(ok?"":"off")+'"><td><span class="dot" aria-hidden="true"></span>'+EX[i].n+'</td><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+b[0]+'</td><td>'+b[1]+'</td><td>'+(ok?"Canlı":"Ulaşılamadı")+'</td></tr>'}).join("");
+  $("ex-body").innerHTML=rows;
+  if(all[0][0].status==="fulfilled")setHero(all[0][0].value.p,all[0][0].value.c);
+  var sp=btc.length>1?(Math.max.apply(null,btc)/Math.min.apply(null,btc)-1)*100:null;
+  $("spread").textContent=sp==null?"-":"%"+sp.toFixed(2).replace(".",",");
+  $("mk-time").textContent="Güncelleme "+new Intl.DateTimeFormat("tr-TR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date());
+ });
+ j("https://api.alternative.me/fng/?limit=1").then(function(r){var d=r.data[0];$("fng").textContent=d.value;$("fng-l").textContent=d.value_classification}).catch(function(){});
+ j("https://api.coingecko.com/api/v3/global").then(function(r){var d=r.data;$("dom").textContent="%"+d.market_cap_percentage.btc.toFixed(1).replace(".",",");$("cap").innerHTML=pc(d.market_cap_change_percentage_24h_usd);$("cap-l").textContent="24 saat"}).catch(function(){});
+}
+function drawHero(k){
+ var c=k.map(function(x){return+x[4]}),t=k.map(function(x){return+x[0]}),n=c.length,W=800,H=240,pad=16,lo=Math.min.apply(null,c),hi=Math.max.apply(null,c),rg=hi-lo||1;
+ function Y(v){return pad+(hi-v)/rg*(H-2*pad)}
+ var d="";for(var i=0;i<n;i++)d+=(i?"L":"M")+(i/(n-1)*W).toFixed(1)+","+Y(c[i]).toFixed(1);
+ var box=$("chart");box.classList.toggle("neg",c[n-1]<c[0]);
+ box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="BTC/USDT son 48 saat fiyat grafiği"><defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".28"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path d="'+d+'L'+W+','+H+'L0,'+H+'Z" fill="url(#ga)"/><path d="'+d+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg><span class="pulse" style="top:'+(Y(c[n-1])/H*100)+'%"></span><span class="xh"></span><span class="dt"></span><span class="tip"></span>';
+ var xh=box.querySelector(".xh"),dt=box.querySelector(".dt"),tip=box.querySelector(".tip");
+ function at(ev){var r=box.getBoundingClientRect(),x=Math.min(r.width,Math.max(0,ev.clientX-r.left)),i=Math.round(x/r.width*(n-1)),px=i/(n-1)*r.width,py=Y(c[i])/H*r.height;
+  xh.style.left=px+"px";dt.style.left=px+"px";dt.style.top=py+"px";tip.style.left=Math.min(r.width-70,Math.max(70,px))+"px";
+  tip.textContent=TF.format(new Date(t[i]))+"  "+pr(c[i])+" USDT";box.classList.add("on")}
+ box.addEventListener("pointermove",at);box.addEventListener("pointerdown",at);box.addEventListener("pointerleave",function(){box.classList.remove("on")});
+ box.querySelector(".pulse").style.display="";
+}
+j("https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=48").then(drawHero).catch(function(){$("chart").style.display="none"});
+loadMarket();setInterval(function(){if(!document.hidden)loadMarket()},30000);
+fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(function(d){
+ var p=[];if(d.updated)p.push("Son tur "+TF.format(new Date(d.updated)));
+ var n=(d.history||[]).filter(function(x){return x.status==="BEKLİYOR"||x.status==="AÇIK"}).length;
+ p.push(n?n+" aktif öneri":"aktif öneri yok");if(d.btc)p.push("BTC 4 saat "+(d.btc.c4>=0?"+":"")+d.btc.c4+"%");
+ $("live").textContent=p.join(", ");
+}).catch(function(){});
+(function(){var tabs=document.querySelectorAll("#desk-tab-island [data-s]");
+ var lock=0;function cur(id){tabs.forEach(function(a){a.setAttribute("aria-current",a.dataset.s===id?"page":"false")})}
+ tabs.forEach(function(a){a.addEventListener("click",function(){cur(a.dataset.s);lock=Date.now()+900})});
+ if("IntersectionObserver" in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&Date.now()>lock)cur(e.target.id)})},{rootMargin:"-40% 0px -55% 0px"});["top","ex","desks"].forEach(function(i){io.observe($(i))})}
+})();
+</script>
+<script>
+(function(){var ua=/Chrome\//.test(navigator.userAgent);
+if(ua&&matchMedia("(hover:hover) and (pointer:fine)").matches&&window.CSS&&CSS.supports("backdrop-filter","url(#lg)")){
+ var e=function(s){return "data:image/svg+xml,"+encodeURIComponent(s)},
+ gx='<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs><linearGradient id="g"><stop offset="0" stop-color="rgb(232,128,128)"/><stop offset=".1" stop-color="rgb(128,128,128)"/><stop offset=".9" stop-color="rgb(128,128,128)"/><stop offset="1" stop-color="rgb(24,128,128)"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/></svg>',
+ gy='<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs><linearGradient id="g" x2="0" y2="1"><stop offset="0" stop-color="rgb(128,232,128)"/><stop offset=".28" stop-color="rgb(128,128,128)"/><stop offset=".72" stop-color="rgb(128,128,128)"/><stop offset="1" stop-color="rgb(128,24,128)"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/></svg>',
+ d=document.createElement("div");
+ d.innerHTML='<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="lg" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage href="'+e(gx)+'" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="mx"/><feImage href="'+e(gy)+'" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="my"/><feComposite in="mx" in2="my" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="26" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
+ document.body.appendChild(d.firstChild);document.documentElement.classList.add("refract")}
+var nav=document.getElementById("desk-tab-island");if(!nav)return;
+function mv(ev){var r=nav.getBoundingClientRect();nav.style.setProperty("--mx",(ev.clientX-r.left)+"px");nav.style.setProperty("--my",(ev.clientY-r.top)+"px")}
+nav.addEventListener("pointerdown",function(ev){mv(ev);nav.classList.add("touch")});
+nav.addEventListener("pointermove",function(ev){if(ev.pointerType==="mouse"||nav.classList.contains("touch")){mv(ev);nav.classList.add("touch")}});
+["pointerup","pointercancel","pointerleave"].forEach(function(t){nav.addEventListener(t,function(){nav.classList.remove("touch");nav.style.removeProperty("--mx");nav.style.removeProperty("--my")})});
+var pill=document.createElement("span");pill.className="pill";pill.setAttribute("aria-hidden","true");nav.insertBefore(pill,nav.firstChild);
+function place(){var cur=nav.querySelector("[aria-current=page]");if(!cur){pill.style.width="0";return}pill.style.width=cur.offsetWidth+"px";pill.style.transform="translate3d("+cur.offsetLeft+"px,0,0)"}
+new MutationObserver(place).observe(nav,{attributes:true,subtree:true,attributeFilter:["aria-current"]});addEventListener("resize",place);place();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(place);
+document.addEventListener("toggle",function(ev){var t=ev.target;if(!t.matches||!t.matches("details.coin"))return;var r=document.documentElement;if(t.open&&t.dataset.mood)r.dataset.mood=t.dataset.mood;else if(!document.querySelector("details.coin[open]"))delete r.dataset.mood},true);
+})();
+</script>
+</body>
+</html>
