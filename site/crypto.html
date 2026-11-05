@@ -127,6 +127,59 @@ details.coin>summary{grid-template-columns:1fr auto auto;grid-template-areas:"s 
 @media(prefers-reduced-transparency:reduce){:root{--glass:var(--card);--glass-strong:var(--card);--glass-act:var(--ntb)}}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){:root{--glass:var(--card);--glass-strong:var(--card)}}
 .spark{display:block;width:96px;height:26px;margin:0;max-width:none}.spark path{fill:none;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}.spark.u path{stroke:var(--ok)}.spark.d path{stroke:var(--bad)}
+/* çizim araçları */
+.dtb{display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap}
+.dtools{display:none;align-items:center;gap:4px;flex-wrap:wrap;padding:3px;border:1px solid var(--bd);border-radius:10px;background:var(--card)}
+html.dopen .dtools{display:flex}
+.dsep{width:1px;height:20px;background:var(--bd);margin:0 3px}
+.dbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:32px;height:32px;padding:0 8px;border:0;border-radius:7px;background:none;color:var(--mu);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.dtog{border:1px solid var(--bd);border-radius:10px;background:var(--card)}
+@media(hover:hover){.dbtn:hover:not(:disabled){color:var(--tx);background:var(--ntb)}}
+.dbtn[aria-pressed=true]{background:var(--ntb);color:var(--tx);box-shadow:inset 0 0 0 1px var(--bd2)}
+.dbtn:disabled{opacity:.35;cursor:default}
+.dbtn svg{display:block;width:18px;height:18px;max-width:none;margin:0;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.dcol{width:20px;height:20px;margin:0 2px;padding:0;border:2px solid transparent;border-radius:50%;background:var(--c);cursor:pointer;box-shadow:0 0 0 1px var(--bd2)}
+.dcol[aria-pressed=true]{border-color:var(--card);box-shadow:0 0 0 2px var(--tx)}
+@media(pointer:coarse){.dbtn{min-width:38px;height:38px}.dcol{width:24px;height:24px}}
+.cw.drawing svg.pc{cursor:crosshair;touch-action:none;-webkit-user-select:none;user-select:none}
+/* PC çalışma alanı */
+.ws{display:none}
+@media(min-width:1024px){
+main{max-width:1440px;padding-top:24px}
+.page-title p{margin:6px 0 16px}
+.bar-in{max-width:1440px}
+.dtog{display:none}
+.dtools{display:flex}
+.view-panel[data-panel=analysis]>.view-intro,.view-panel[data-panel=analysis]>#asset-tools,.view-panel[data-panel=analysis]>h2:first-of-type,.coin-help{display:none}
+details.coin{display:none}
+.ws{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,410px);gap:16px;margin:0 0 28px}
+.ws-chart,.ws-pred,.ws-tail{margin:0}
+.ws-chart{min-width:0;padding:14px 16px 12px}
+.ws-pred{position:relative;min-height:340px;padding:0;overflow:hidden}
+.ws-pred-in{position:absolute;inset:0;overflow:auto;padding:14px 16px 18px}
+.ws-h{margin:0 0 10px;font-size:15px}
+.ws-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ws-ht{display:flex;align-items:center;gap:12px}
+.ws-ht .sym{font-size:22px;letter-spacing:-.01em}.ws-hp{font-size:22px;font-weight:500}
+.ws-hr{display:flex;align-items:center;gap:12px}
+.ws-chart svg.pc{max-width:none;margin-top:8px}
+.ws-tail{grid-column:1/-1}
+.ws-tail details.sub-d{margin:0;padding:0;border:0}
+.ws-strip{grid-column:1/-1;display:flex;align-items:stretch;gap:8px;min-width:0}
+.ws-nav{flex:none;width:36px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit;font-size:22px;line-height:1;cursor:pointer}
+.ws-nav:hover{background:var(--ntb)}
+.ws-track{position:relative;flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;padding:2px;scroll-snap-type:x proximity;scrollbar-width:thin;cursor:grab;-webkit-user-select:none;user-select:none}
+.ws-item{flex:none;width:178px;scroll-snap-align:start;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;align-items:center;padding:10px 12px;text-align:left;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit;cursor:pointer}
+.ws-item:hover{border-color:var(--bd2);background:var(--ntb)}
+.ws-item[aria-current=true]{border-color:var(--bd2);background:var(--ntb);box-shadow:inset 0 0 0 1px var(--bd2)}
+.ws-item[aria-current=true][data-mood=AL]{box-shadow:inset 0 -3px 0 var(--ok)}.ws-item[aria-current=true][data-mood=SAT]{box-shadow:inset 0 -3px 0 var(--bad)}
+.ws-sym{font-size:15px;font-weight:600}.ws-pr{font-weight:500}
+.ws-item .spark{width:64px;height:22px;justify-self:end}
+.ws-meta{grid-column:1/-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.view-panel.is-active[data-panel=recommendations],.view-panel.is-active[data-panel=history]{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:0 16px;align-content:start}
+.view-panel[data-panel=recommendations]>*,.view-panel[data-panel=history]>*{min-width:0}
+.view-panel[data-panel=recommendations]>header,.view-panel[data-panel=recommendations]>h2,.view-panel[data-panel=history]>header,.view-panel[data-panel=history]>h2,.view-panel[data-panel=history]>.stats,.view-panel[data-panel=history]>div:not(.card),.view-panel[data-panel=recommendations]>div:not(.card){grid-column:1/-1}
+}
 </style>
 </head>
 <body>
@@ -162,8 +215,10 @@ function sigCard(h,now){
 function r1(x){return +x.toFixed(1)}
 function spark(c){if(!c||c.length<2)return"";var lo=Math.min.apply(null,c),hi=Math.max.apply(null,c),r=hi-lo||1,d="",n=c.length;for(var i=0;i<n;i++)d+=(i?"L":"M")+(i/(n-1)*96).toFixed(1)+","+(24-(c[i]-lo)/r*22).toFixed(1);return '<svg class="spark c-spark '+(c[n-1]>=c[0]?"u":"d")+'" viewBox="0 0 96 26" aria-hidden="true"><path d="'+d+'"/></svg>'}
 function axf(v,rg){var st=rg/4,dec=st>=1?0:Math.min(8,Math.ceil(-Math.log10(st||1))+1);return v.toFixed(dec)}
-function chart(c,lv){
-  var W=372,AX=50,Wp=W-AX,PH=180,RH=44,MH=40,G=10,TH=18,pad=6,n=c.c.length,step=(Wp-8)/n,bw=Math.max(1.4,step*.62),i;
+var CHN=0;
+function chart(c,lv,o){
+  o=o||{};
+  var W=o.W||372,AX=50,Wp=W-AX,PH=o.PH||180,RH=o.RH||44,MH=o.MH||40,G=10,TH=18,pad=6,n=c.c.length,step=(Wp-8)/n,bw=Math.max(1.4,step*.62),i;
   var lo=1e18,hi=-1e18;
   for(i=0;i<n;i++){lo=Math.min(lo,c.l[i],c.bl[i]);hi=Math.max(hi,c.h[i],c.bu[i])}
   var rg=hi-lo||hi*.01||1;lo-=rg*.03;hi+=rg*.03;rg=hi-lo;
@@ -204,8 +259,8 @@ function chart(c,lv){
   var z=mt+MH/2;
   s+='<line x1="4" x2="'+Wp+'" y1="'+r1(z)+'" y2="'+r1(z)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+r1(z+3)+'">MACD 0</text>';
   for(i=0;i<n;i++){var hh=mx?c.mh[i]/mx*(MH/2-2):0;s+='<rect x="'+r1(X(i)-bw/2)+'" y="'+r1(hh>=0?z-hh:z)+'" width="'+r1(bw)+'" height="'+r1(Math.max(.6,Math.abs(hh)))+'" class="'+(hh>=0?"up":"dn")+'"/>'}
-  var L=n-1;
-  return '<svg role="img" aria-label="Fiyat mum grafiği, EMA20, EMA50, Bollinger bantları, RSI ve MACD göstergeleri" viewBox="0 0 '+W+" "+H+'">'+s+'</svg>'+
+  var L=n-1,cid=++CHN;
+  return '<svg class="pc" role="img" aria-label="Fiyat mum grafiği, EMA20, EMA50, Bollinger bantları, RSI ve MACD göstergeleri" viewBox="0 0 '+W+" "+H+'" data-n="'+n+'" data-t0="'+c.t0+'" data-t1="'+c.t1+'" data-hi="'+hi+'" data-rg="'+(rg||1)+'" data-ph="'+PH+'" data-pad="'+pad+'" data-step="'+step+'" data-wp="'+Wp+'" data-w="'+W+'"><defs><clipPath id="dcp'+cid+'"><rect x="4" y="0" width="'+(Wp-4)+'" height="'+PH+'"/></clipPath></defs>'+s+'<g class="dw" clip-path="url(#dcp'+cid+')"></g></svg>'+
   '<div class="legend">Son kapanış <b>'+fm(c.c[L])+'</b> · <span class="k-e20">━ EMA20 '+fm(c.e20[L])+'</span> · <span class="k-e50">━ EMA50 '+fm(c.e50[L])+'</span> · Bollinger alt/üst '+fm(c.bl[L])+' / '+fm(c.bu[L])+' · <span style="color:var(--ok)">▲ AL</span> <span style="color:var(--bad)">▼ SAT</span> ('+TFL+' skorun değiştiği mum)</div>';
 }
 function btChart(b){
@@ -253,7 +308,7 @@ function fwdCard(f){
   if(tot<60)s+='<div class="mu" style="margin-top:6px">Henüz az sonuç var. Anlamlı bir yorum için her iki profilde de en az 30 sonuçlanan kayıt gerekir; bu birkaç hafta sürebilir.</div>';
   return s+'</div>';
 }
-function coinBody(t,d){
+function coinPred(t,d){
   var h='';
   if(t.conf!=null)h+='<div class="row"><span>Güven puanı <b>'+t.conf+'/100</b> <span class="mu">(kural tabanlı, kalibre edilmemiş; %'+t.conf+' başarı ihtimali demek değildir)</span></span>'+chip(t.signal==="BEKLE"?t.raw:t.signal,SGC[t.signal==="BEKLE"?t.raw:t.signal])+'</div><div class="mu">'+esc(t.conf_parts.join(" · "))+'</div>';
   h+='<div class="votes">';
@@ -266,12 +321,266 @@ function coinBody(t,d){
   if(t.explain&&t.explain.length)h+='<details style="margin-top:6px"><summary class="mu" style="cursor:pointer"><b>Neden bu karar?</b></summary><ul class="mu" style="margin:6px 0 0;padding-left:18px">'+t.explain.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></details>';
   var a=t.stats.al,s=t.stats.sat;
   h+='<div class="mu" style="margin-top:6px">Son ~'+t.stats.days+' gün (bu coin, '+t.stats.fwd_h+' saat sonrası): AL sinyali '+a.n+' kez'+(a.n?', %'+a.hit+'’i artıda, ort. '+(a.avg>0?"+":"")+a.avg+'%':'')+'. SAT sinyali '+s.n+' kez'+(s.n?', %'+s.hit+'’i düşüşte, ort. '+(s.avg>0?"+":"")+s.avg+'%':'')+'. Küçük örneklem, kesin kanıt sayılmaz.</div>';
+  return h;
+}
+function coinLv(t,d){
   var lv=[];
   (d.history||[]).forEach(function(x){if(x.symbol===t.sym&&(x.status==="BEKLİYOR"||x.status==="AÇIK")){
     lv.push({v:x.entry,t:"giriş",col:"var(--blue)"},{v:x.stop,t:"stop",col:"var(--bad)"},{v:x.target,t:"hedef",col:"var(--ok)"})}});
-  return h+chart(t.chart,lv)+'<details class="sub-d"><summary>Backtest ve doğrulama</summary>'+(t.bt?btText(t.bt):'')+wfText(t.wf)+'</details>';
+  return lv;
+}
+function coinTail(t){return '<details class="sub-d"><summary>Backtest ve doğrulama</summary>'+(t.bt?btText(t.bt):'')+wfText(t.wf)+'</details>'}
+function coinChart(t,d,o){return '<div class="cw" data-sym="'+esc(t.sym)+'">'+drawBar()+chart(t.chart,coinLv(t,d),o)+'</div>'}
+function coinBody(t,d){return coinPred(t,d)+coinChart(t,d)+coinTail(t)}
+function coinRecs(t,d){
+  var a=(d.history||[]).filter(function(x){return x.symbol===t.sym&&(x.status==="BEKLİYOR"||x.status==="AÇIK")});
+  return a.length?'<h2 class="ws-h" style="margin-top:16px">Bu varlık için aktif öneri</h2>'+a.map(function(x){return sigCard(x,d.now)}).join(""):'';
 }
 
+
+/* ===== Çizim araçları ===== */
+var DESK=window.matchMedia("(min-width:1024px)");
+var DKEY="marketpulse.draw.v1",DCOL=["blue","amber","violet","ok","bad"],DCN={blue:"Mavi",amber:"Turuncu",violet:"Mor",ok:"Yeşil",bad:"Kırmızı"};
+var TOOL={k:null,c:"blue"},DR={},ACT=null,LASTSYM=null;
+var DI={
+  toggle:'<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+  cur:'<path d="M5 3l14 8-6 2-3 6z"/>',
+  free:'<path d="M3 16c3-7 5 3 8-3s5 2 10-6"/>',
+  line:'<path d="M4 20L20 4"/><circle cx="4" cy="20" r="1.5"/><circle cx="20" cy="4" r="1.5"/>',
+  hline:'<path d="M3 12h18"/><path d="M6 9l-3 3 3 3M18 9l3 3-3 3"/>',
+  rect:'<rect x="4" y="6" width="16" height="12" rx="1"/>',
+  erase:'<path d="M9 19h11"/><path d="M5 14l8-9 6 6-6 8H8z"/><path d="M9.5 9.5l6 6"/>',
+  undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  redo:'<path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+  clear:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'
+};
+function dBtn(k,label,extra){return '<button type="button" class="dbtn'+(extra||"")+'" data-dt="'+k+'" title="'+label+'" aria-label="'+label+'" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true">'+DI[k]+'</svg>'+(k==="toggle"?'<span>Çiz</span>':'')+'</button>'}
+function drawBar(){
+  return '<div class="dtb">'+dBtn("toggle","Çizim araçlarını aç/kapat"," dtog")+'<div class="dtools" role="toolbar" aria-label="Çizim araçları">'+
+    dBtn("cur","İmleç (çizimi kapat)")+dBtn("free","Serbest çizim")+dBtn("line","Çizgi")+dBtn("hline","Yatay çizgi")+dBtn("rect","Dikdörtgen")+dBtn("erase","Silgi: dokunduğun çizimi siler")+
+    '<span class="dsep"></span>'+DCOL.map(function(c){return '<button type="button" class="dcol" data-dc="'+c+'" style="--c:var(--'+c+')" title="'+DCN[c]+'" aria-label="'+DCN[c]+'" aria-pressed="false"></button>'}).join("")+
+    '<span class="dsep"></span>'+dBtn("undo","Geri al (Ctrl+Z)")+dBtn("redo","İleri al (Ctrl+Shift+Z)")+dBtn("clear","Tüm çizimleri sil (geri alınabilir)")+'</div></div>';
+}
+function drAll(){try{var a=JSON.parse(localStorage.getItem(DKEY)||"{}");return a&&typeof a==="object"?a:{}}catch(e){return{}}}
+function drClean(a){
+  if(!Array.isArray(a))return[];
+  return a.filter(function(s){return s&&typeof s.id==="string"&&/^(free|line|hline|rect)$/.test(s.k)&&Array.isArray(s.p)&&s.p.length&&s.p.every(function(q){return q&&isFinite(q.p)&&(s.k==="hline"||isFinite(q.t))})})
+   .map(function(s){return{id:s.id,k:s.k,c:DCOL.indexOf(s.c)>=0?s.c:"blue",p:s.p.slice(0,800).map(function(q){return{t:+q.t,p:+q.p}})}});
+}
+function drGet(sym){var s=DR[sym];if(!s)s=DR[sym]={shapes:drClean(drAll()[sym]),past:[],future:[]};return s}
+function drPersist(sym){try{var a=drAll(),sh=DR[sym].shapes;if(sh.length)a[sym]=sh;else delete a[sym];localStorage.setItem(DKEY,JSON.stringify(a))}catch(e){}}
+function drCommit(sym,shapes){var s=drGet(sym);s.past.push(s.shapes);if(s.past.length>100)s.past.shift();s.future=[];s.shapes=shapes;drPersist(sym);drRefresh(sym)}
+function drUndo(sym){var s=drGet(sym);if(!s.past.length)return;s.future.push(s.shapes);s.shapes=s.past.pop();drPersist(sym);drRefresh(sym)}
+function drRedo(sym){var s=drGet(sym);if(!s.future.length)return;s.past.push(s.shapes);s.shapes=s.future.pop();drPersist(sym);drRefresh(sym)}
+function drClear(sym){if(drGet(sym).shapes.length)drCommit(sym,[])}
+function drCws(sym){return Array.prototype.filter.call(document.querySelectorAll(".cw"),function(c){return c.dataset.sym===sym})}
+function drRefresh(sym){drCws(sym).forEach(drRender);drUI()}
+function drMount(root){Array.prototype.forEach.call(root.querySelectorAll(".cw"),drRender);drUI()}
+function curTool(){return(DESK.matches||document.documentElement.classList.contains("dopen"))?TOOL.k:null}
+function drUI(){
+  var tool=curTool(),open=document.documentElement.classList.contains("dopen");
+  Array.prototype.forEach.call(document.querySelectorAll(".cw"),function(cw){
+    cw.classList.toggle("drawing",tool!==null);
+    var st=drGet(cw.dataset.sym);
+    Array.prototype.forEach.call(cw.querySelectorAll(".dbtn"),function(b){
+      var k=b.dataset.dt;
+      if(k==="toggle")b.setAttribute("aria-pressed",open?"true":"false");
+      else if(k==="undo")b.disabled=!st.past.length;
+      else if(k==="redo")b.disabled=!st.future.length;
+      else if(k==="clear")b.disabled=!st.shapes.length;
+      else b.setAttribute("aria-pressed",(k==="cur"?tool===null:tool===k)?"true":"false");
+    });
+    Array.prototype.forEach.call(cw.querySelectorAll(".dcol"),function(b){b.setAttribute("aria-pressed",b.dataset.dc===TOOL.c?"true":"false")});
+  });
+}
+function drGeo(svg){
+  var d=svg.dataset,g={n:+d.n,t0:+d.t0,t1:+d.t1,hi:+d.hi,rg:+d.rg,ph:+d.ph,pad:+d.pad,step:+d.step,wp:+d.wp,w:+d.w};
+  g.X=function(t){return 4+g.step*((t-g.t0)/(g.t1-g.t0)*(g.n-1)+.5)};
+  g.T=function(x){return g.t0+(g.t1-g.t0)*((x-4)/g.step-.5)/(g.n-1)};
+  g.Y=function(p){return g.pad+(g.hi-p)/g.rg*(g.ph-2*g.pad)};
+  g.P=function(y){return g.hi-(y-g.pad)/(g.ph-2*g.pad)*g.rg};
+  return g;
+}
+function drShape(s,g,draft){
+  var col="var(--"+s.c+")",st='stroke="'+col+'" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"'+(draft?' opacity=".7"':''),P=s.p,i,d;
+  if(s.k==="hline"){var y=r1(g.Y(P[0].p));return '<line x1="4" x2="'+g.wp+'" y1="'+y+'" y2="'+y+'" '+st+' stroke-dasharray="5 3"/><text x="'+(g.wp-2)+'" y="'+(y-3)+'" text-anchor="end" style="fill:'+col+'">'+fm(P[0].p)+'</text>'}
+  if(s.k==="free"){d="";for(i=0;i<P.length;i++)d+=(i?"L":"M")+r1(g.X(P[i].t))+","+r1(g.Y(P[i].p));return '<path d="'+d+'" '+st+'/>'}
+  if(P.length<2)return "";
+  var x1=r1(g.X(P[0].t)),y1=r1(g.Y(P[0].p)),x2=r1(g.X(P[1].t)),y2=r1(g.Y(P[1].p));
+  if(s.k==="line")return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" '+st+'/><circle cx="'+x1+'" cy="'+y1+'" r="2.3" fill="'+col+'"/><circle cx="'+x2+'" cy="'+y2+'" r="2.3" fill="'+col+'"/>';
+  return '<rect x="'+Math.min(x1,x2)+'" y="'+Math.min(y1,y2)+'" width="'+Math.abs(x2-x1)+'" height="'+Math.abs(y2-y1)+'" '+st.replace('fill="none"','fill="'+col+'" fill-opacity=".1"')+'/>';
+}
+function drRender(cw){
+  var svg=cw.querySelector("svg.pc"),gel=svg&&svg.querySelector(".dw");if(!gel)return;
+  var g=svg._g||(svg._g=drGeo(svg)),mine=ACT&&ACT.cw===cw,list=mine&&ACT.k==="erase"?ACT.work:drGet(cw.dataset.sym).shapes,h="",i;
+  for(i=0;i<list.length;i++)h+=drShape(list[i],g,false);
+  if(mine&&ACT.k!=="erase"){var dr=drMake(ACT,false);if(dr)h+=drShape(dr,g,true)}
+  gel.innerHTML=h;
+}
+function drMake(a,fin){
+  var g=a.g,q=a.pts,i,p=[];
+  if(a.k==="hline"){var l=q[q.length-1];return{id:"",k:"hline",c:a.c,p:[{p:+g.P(l.y).toPrecision(8)}]}}
+  if(q.length<2)return null;
+  if(fin){var f=q[0],e=q[q.length-1];if(Math.hypot(e.x-f.x,e.y-f.y)<4&&a.k!=="free")return null;if(a.k==="free"&&q.length<3)return null}
+  if(a.k==="free")for(i=0;i<q.length;i++)p.push({t:Math.round(g.T(q[i].x)),p:+g.P(q[i].y).toPrecision(8)});
+  else p=[q[0],q[q.length-1]].map(function(z){return{t:Math.round(g.T(z.x)),p:+g.P(z.y).toPrecision(8)}});
+  return{id:"",k:a.k,c:a.c,p:p};
+}
+function segD(px,py,ax,ay,bx,by){var dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/l)):0;return Math.hypot(px-ax-t*dx,py-ay-t*dy)}
+function drHit(s,g,x,y,thr){
+  var P=s.p,i;
+  if(s.k==="hline")return Math.abs(g.Y(P[0].p)-y)<thr;
+  if(s.k==="free"){for(i=1;i<P.length;i++)if(segD(x,y,g.X(P[i-1].t),g.Y(P[i-1].p),g.X(P[i].t),g.Y(P[i].p))<thr)return true;return P.length===1&&Math.hypot(x-g.X(P[0].t),y-g.Y(P[0].p))<thr}
+  if(P.length<2)return false;
+  var x1=g.X(P[0].t),y1=g.Y(P[0].p),x2=g.X(P[1].t),y2=g.Y(P[1].p);
+  if(s.k==="line")return segD(x,y,x1,y1,x2,y2)<thr;
+  return x>=Math.min(x1,x2)-thr/2&&x<=Math.max(x1,x2)+thr/2&&y>=Math.min(y1,y2)-thr/2&&y<=Math.max(y1,y2)+thr/2;
+}
+function drErase(x,y){
+  var a=ACT,thr=10*(a.g.w/(a.svg.clientWidth||a.g.w)),w=a.work,i;
+  for(i=w.length-1;i>=0;i--)if(drHit(w[i],a.g,x,y,thr)){a.work=w.slice(0,i).concat(w.slice(i+1));a.changed=true;return}
+}
+function drPt(svg,e,g){
+  var m=svg.getScreenCTM();if(!m)return null;
+  var p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;var q=p.matrixTransform(m.inverse());
+  return{x:Math.max(4,Math.min(g.wp,q.x)),y:Math.max(0,Math.min(g.ph,q.y)),raw:q};
+}
+function drEnd(e,cancel){
+  if(!ACT||e.pointerId!==ACT.id)return;
+  var a=ACT;ACT=null;
+  try{a.svg.releasePointerCapture(a.id)}catch(_){}
+  if(cancel){drRender(a.cw);return}
+  if(a.k==="erase"){if(a.changed)drCommit(a.sym,a.work);else drRender(a.cw);return}
+  var sh=drMake(a,true);
+  if(sh){sh.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);drCommit(a.sym,drGet(a.sym).shapes.concat([sh]))}
+  else drRender(a.cw);
+}
+function curSym(){
+  if(LASTSYM&&drCws(LASTSYM).length)return LASTSYM;
+  var c=document.querySelector(".cw");return c?c.dataset.sym:null;
+}
+document.addEventListener("pointerdown",function(e){
+  var svg=e.target.closest&&e.target.closest("svg.pc"),cw=svg&&svg.closest(".cw");
+  if(cw)LASTSYM=cw.dataset.sym;
+  var k=curTool();if(!k||!svg||!cw||ACT)return;
+  if(e.pointerType==="mouse"&&e.button!==0)return;
+  var g=svg._g||(svg._g=drGeo(svg)),q=drPt(svg,e,g);
+  if(!q||q.raw.y>g.ph+2)return;
+  e.preventDefault();
+  try{svg.setPointerCapture(e.pointerId)}catch(_){}
+  ACT={cw:cw,svg:svg,g:g,sym:cw.dataset.sym,k:k,c:TOOL.c,id:e.pointerId,pts:[{x:q.x,y:q.y}],work:null,changed:false};
+  if(k==="erase"){ACT.work=drGet(ACT.sym).shapes;drErase(q.x,q.y)}
+  drRender(cw);
+},{passive:false});
+document.addEventListener("pointermove",function(e){
+  if(!ACT||e.pointerId!==ACT.id)return;
+  var q=drPt(ACT.svg,e,ACT.g);if(!q)return;
+  var a=ACT,l=a.pts[a.pts.length-1];
+  if(a.k==="free"){if(Math.hypot(q.x-l.x,q.y-l.y)>2&&a.pts.length<800)a.pts.push({x:q.x,y:q.y})}
+  else if(a.k==="erase")drErase(q.x,q.y);
+  else a.pts[1]={x:q.x,y:q.y};
+  drRender(a.cw);
+});
+document.addEventListener("pointerup",function(e){drEnd(e,false)});
+document.addEventListener("pointercancel",function(e){drEnd(e,true)});
+document.addEventListener("click",function(e){
+  var b=e.target.closest&&e.target.closest(".dbtn,.dcol");if(!b)return;
+  var cw=b.closest(".cw"),sym=cw&&cw.dataset.sym,root=document.documentElement;
+  if(sym)LASTSYM=sym;
+  if(b.dataset.dc){TOOL.c=b.dataset.dc;drUI();return}
+  var k=b.dataset.dt;
+  if(k==="toggle"){var on=!root.classList.contains("dopen");root.classList.toggle("dopen",on);if(!on)TOOL.k=null}
+  else if(k==="cur")TOOL.k=null;
+  else if(k==="undo")drUndo(sym);
+  else if(k==="redo")drRedo(sym);
+  else if(k==="clear")drClear(sym);
+  else TOOL.k=TOOL.k===k?null:k;
+  drUI();
+});
+document.addEventListener("keydown",function(e){
+  var t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+  if(document.querySelector("dialog[open]"))return;
+  var mod=e.ctrlKey||e.metaKey,k=(e.key||"").toLowerCase(),sym;
+  if(mod&&(k==="z"||k==="y")){
+    sym=curSym();if(!sym)return;e.preventDefault();
+    if(k==="y"||e.shiftKey)drRedo(sym);else drUndo(sym);
+  }else if(!mod&&k==="escape"&&TOOL.k!==null){TOOL.k=null;drUI()}
+});
+window.addEventListener("storage",function(e){if(e.key===DKEY){DR={};Array.prototype.forEach.call(document.querySelectorAll(".cw"),drRender);drUI()}});
+
+/* ===== PC çalışma alanı: sol grafik, sağ tahminler, altta varlık şeridi ===== */
+function mountWorkspace(items,d,api){
+  var ws=document.getElementById("ws");if(!ws)return;
+  ws.innerHTML='<section class="card ws-chart" aria-label="İncelenen varlığın grafiği"><div class="ws-head" id="ws-head"></div><div id="ws-chart"></div></section>'+
+    '<aside class="card ws-pred" aria-label="Tahminler"><div class="ws-pred-in" id="ws-pred"></div></aside>'+
+    '<div class="ws-strip"><button type="button" class="ws-nav" data-dir="-1" aria-label="Önceki varlıklar">‹</button><div class="ws-track" id="ws-track" aria-label="Diğer varlıklar"></div><button type="button" class="ws-nav" data-dir="1" aria-label="Sonraki varlıklar">›</button></div>'+
+    '<div class="card ws-tail" id="ws-tail"></div>';
+  var head=document.getElementById("ws-head"),chartEl=document.getElementById("ws-chart"),pred=document.getElementById("ws-pred"),track=document.getElementById("ws-track"),tail=document.getElementById("ws-tail");
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches,lastW=0;
+  function sym(it){return String(it.sym||"").replace(/USDT$/,"")}
+  function order(){var p=api.pins();return items.map(function(x,i){return i}).sort(function(a,b){return(p.indexOf(items[a].sym)>=0?0:1)-(p.indexOf(items[b].sym)>=0?0:1)||a-b})}
+  function renderStrip(){
+    var sl=track.scrollLeft,cur=api.sel();
+    track.innerHTML=order().map(function(i){
+      var t=items[i];
+      return '<button type="button" class="ws-item" data-i="'+i+'" data-mood="'+esc(t.signal)+'" aria-current="'+(i===cur?"true":"false")+'"><b class="ws-sym">'+(api.pins().indexOf(t.sym)>=0?'<i class="pin">★</i>':'')+esc(sym(t))+'</b>'+chip(t.signal,SGC[t.signal])+'<span class="ws-pr">'+fm(t.price)+'</span>'+spark(t.chart&&t.chart.c)+'<span class="mu ws-meta">'+esc(t.regime)+' · skor '+(t.score>0?"+":"")+t.score+'</span></button>';
+    }).join("");
+    track.scrollLeft=sl;
+  }
+  function mark(i){
+    Array.prototype.forEach.call(track.children,function(b){b.setAttribute("aria-current",+b.dataset.i===i?"true":"false")});
+    var el=track.querySelector('[data-i="'+i+'"]');
+    if(el)track.scrollTo({left:Math.max(0,el.offsetLeft-track.clientWidth/2+el.offsetWidth/2),behavior:reduce?"auto":"smooth"});
+  }
+  function render(){
+    if(!DESK.matches||!items.length)return;
+    var i=api.sel(),t=items[i];if(!t)return;
+    LASTSYM=t.sym;
+    document.documentElement.dataset.mood=t.signal;
+    lastW=Math.round(chartEl.clientWidth);
+    var W=Math.max(520,Math.min(1200,lastW||800));
+    var PH=Math.max(230,Math.min(420,window.innerHeight-680));
+    head.innerHTML='<div class="ws-ht"><span class="sym">'+esc(sym(t))+'</span><span class="ws-hp">'+fm(t.price)+'</span>'+chip(t.signal,SGC[t.signal])+'</div><div class="ws-hr"><span class="mu">'+esc(TFL)+' mumlar · son '+t.chart.c.length+' mum</span><button type="button" class="island-manage" data-ws="pick">Varlık seç</button></div>';
+    chartEl.innerHTML=coinChart(t,d,{W:W,PH:PH,RH:54,MH:44});
+    pred.innerHTML='<h2 class="ws-h">Tahminler</h2>'+coinPred(t,d)+coinRecs(t,d);
+    tail.innerHTML=coinTail(t);
+    drMount(chartEl);
+    mark(i);
+  }
+  api.H.sel=render;api.H.pins=renderStrip;
+  ws.addEventListener("click",function(e){
+    var it=e.target.closest(".ws-item");
+    if(it){if(track._sup)return;api.activate(+it.dataset.i);return}
+    var nv=e.target.closest(".ws-nav");
+    if(nv){track.scrollBy({left:+nv.dataset.dir*track.clientWidth*.8,behavior:reduce?"auto":"smooth"});return}
+    if(e.target.closest("[data-ws=pick]"))document.getElementById("open-asset-picker").click();
+  },true);
+  track.addEventListener("wheel",function(e){
+    if(track.scrollWidth<=track.clientWidth||Math.abs(e.deltaY)<=Math.abs(e.deltaX))return;
+    var max=track.scrollWidth-track.clientWidth;
+    if((e.deltaY<0&&track.scrollLeft<=0)||(e.deltaY>0&&track.scrollLeft>=max-1))return;
+    e.preventDefault();track.scrollLeft+=e.deltaY;
+  },{passive:false});
+  var dn=null;
+  track.addEventListener("mousedown",function(e){if(e.button===0)dn={x:e.clientX,sl:track.scrollLeft,m:false}});
+  window.addEventListener("mousemove",function(e){if(!dn)return;var dx=e.clientX-dn.x;if(Math.abs(dx)>5)dn.m=true;if(dn.m)track.scrollLeft=dn.sl-dx});
+  window.addEventListener("mouseup",function(){if(dn&&dn.m){track._sup=true;setTimeout(function(){track._sup=false},0)}dn=null});
+  document.addEventListener("keydown",function(e){
+    if(!DESK.matches||(e.key!=="ArrowLeft"&&e.key!=="ArrowRight")||e.ctrlKey||e.metaKey||e.altKey)return;
+    var t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    if(document.querySelector("dialog[open]"))return;
+    var pn=document.querySelector(".view-panel.is-active");if(!pn||pn.dataset.panel!=="analysis")return;
+    var o=order(),at=o.indexOf(api.sel()),nx=o[at+(e.key==="ArrowRight"?1:-1)];
+    if(nx!=null){e.preventDefault();api.activate(nx)}
+  });
+  var rt=null;
+  function onResize(){clearTimeout(rt);rt=setTimeout(function(){var w=Math.round(chartEl.clientWidth);if(DESK.matches&&!ACT&&w>0&&Math.abs(w-lastW)>30)render()},150)}
+  if(window.ResizeObserver)new ResizeObserver(onResize).observe(chartEl);else window.addEventListener("resize",onResize);
+  var onMq=function(){if(DESK.matches)render();drUI()};
+  if(DESK.addEventListener)DESK.addEventListener("change",onMq);else if(DESK.addListener)DESK.addListener(onMq);
+  renderStrip();
+  if(DESK.matches)render();
+}
 
 function buildDeskViews(){
   var app=document.getElementById("app");
@@ -329,7 +638,7 @@ function mountAssetIsland(items){
   var search=document.getElementById("asset-search");
   var current=document.getElementById("island-current-symbol");
   if(!dock||!dialog||!list||!search||!current)return;
-  var selected=0, query="";
+  var selected=0, query="", H={};
   var pinKey="marketpulse.assetPins.v1";
   function readPins(){try{return JSON.parse(localStorage.getItem(pinKey)||"[]")}catch(e){return[]}}
   function writePins(p){try{localStorage.setItem(pinKey,JSON.stringify(p))}catch(e){}}
@@ -342,14 +651,17 @@ function mountAssetIsland(items){
     selected=i;current.textContent=symbol(item);
     var card=cardAt(i);
     if(card){
-      card.open=true;
-      card.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});
+      if(!DESK.matches){
+        card.open=true;
+        card.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});
+      }
       var s=signal(item),root=document.documentElement;
       root.dataset.marketMood=s;
       root.style.setProperty("--signal-green",s==="AL"?"1":"0");
       root.style.setProperty("--signal-red",s==="SAT"?"1":"0");
       card.dataset.mood=s;
     }
+    if(H.sel)H.sel(i);
     renderDock();renderPicker();
     if(dialog.open)dialog.close();
   }
@@ -389,6 +701,7 @@ function mountAssetIsland(items){
       var pins=readPins(),at=pins.indexOf(item.sym);
       if(at>=0)pins.splice(at,1);else pins.push(item.sym);
       writePins(pins);renderDock();renderPicker();
+      if(H.pins)H.pins();
     }
   });
   search.addEventListener("input",function(){query=search.value.trim();renderPicker()});
@@ -398,6 +711,7 @@ function mountAssetIsland(items){
   document.getElementById("close-asset-picker").addEventListener("click",function(){dialog.close()});
   dialog.addEventListener("click",function(e){if(e.target===dialog)dialog.close()});
   if(items.length){current.textContent=symbol(items[0]);renderDock();renderPicker()}else{current.textContent="—";dock.innerHTML='<span class="mu">Varlık verisi yok</span>'}
+  return {H:H,activate:activate,sel:function(){return selected},pins:readPins};
 }
 
 fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(function(d){
@@ -418,8 +732,9 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   var act=(d.history||[]).filter(function(x){return x.status==="BEKLİYOR"||x.status==="AÇIK"});
   h+="<h2>Aktif öneriler</h2>"+(act.length?act.map(function(x){return sigCard(x,d.now)}).join(""):'<div class="card mu">Şu an aktif öneri yok.</div>');
   var w=d.watch||[];
-  h+="<h2>Teknik analiz</h2><div class='mu' style='margin-bottom:12px'>Takip listesi ve hacim liderleri, sinyal "+TFL+" mumlarla hesaplanır. Satıra dokununca grafik, gösterge oyları ve geçmiş sinyal istatistiği açılır. SAT: elinde varsa çıkmayı düşün, yoksa alma. Takip listesi repodaki watchlist.txt dosyasından değişir.</div>";
+  h+="<h2>Teknik analiz</h2><div class='mu coin-help' style='margin-bottom:12px'>Takip listesi ve hacim liderleri, sinyal "+TFL+" mumlarla hesaplanır. Satıra dokununca grafik, gösterge oyları ve geçmiş sinyal istatistiği açılır. SAT: elinde varsa çıkmayı düşün, yoksa alma. Takip listesi repodaki watchlist.txt dosyasından değişir.</div>";
   if(d.missing&&d.missing.length)h+='<div class="banner">Binance’te bulunamadı: '+esc(d.missing.join(", "))+' (watchlist.txt’yi kontrol et)</div>';
+  h+='<div id="ws" class="ws"></div>';
   w.forEach(function(t,i){
     h+='<details class="card coin" data-i="'+i+'" data-mood="'+esc(t.signal)+'"><summary><span class="sym c-sym">'+(t.pin?'<i class="pin" title="Takip listesi">★</i>':'')+esc(t.sym.replace(/USDT$/,""))+'</span><span class="c-price">'+fm(t.price)+'</span>'+spark(t.chart&&t.chart.c)+'<span class="c-meta">skor '+(t.score>0?"+":"")+t.score+', '+esc(t.regime)+', '+HTFS+' '+esc(t.trend4)+(t.conf!=null?', güven '+t.conf:'')+(t.note?', '+esc(t.note):'')+'</span>'+chip(t.signal,SGC[t.signal])+'</summary><div class="cb"></div></details>';
   });
@@ -452,10 +767,11 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   '<li><b>Simülasyon kuralları:</b> Backtest girişi sinyalin ertesi mumunun açılışıdır (+kayma). Canlı limit önerilerinde fiyat limitin altına inmeden dolum sayılmaz, dolum mumunda hedef sayılmaz, stop ve hedef aynı mumdaysa stop. Üst zaman dilimi mumları ancak kapandıktan sonra kullanılır. Backtest’te BTC filtresi yoktur, spot işlemde fonlama maliyeti olmaz.</li></ul></details>';
   document.getElementById("app").innerHTML=h;
   buildDeskViews();
-  mountAssetIsland(w);
+  var api=mountAssetIsland(w);
+  if(api)mountWorkspace(w,d,api);
   Array.prototype.forEach.call(document.querySelectorAll("details.coin"),function(el){
     el.addEventListener("toggle",function(){
-      if(el.open&&!el.dataset.done){el.dataset.done=1;el.querySelector(".cb").innerHTML=coinBody(w[+el.dataset.i],d)}
+      if(el.open&&!el.dataset.done){el.dataset.done=1;var cb=el.querySelector(".cb");cb.innerHTML=coinBody(w[+el.dataset.i],d);drMount(cb)}
     });
   });
 }).catch(function(e){
