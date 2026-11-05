@@ -263,6 +263,54 @@ a:focus-visible,summary:focus-visible,button:focus-visible,input:focus-visible{o
   html{scroll-behavior:auto}
 }
 
+
+/* Product navigation: distinct workspaces, compact iPhone-style bottom island. */
+body{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+#app{display:block}
+.desk-views{position:relative;min-height:48vh}
+.view-panel{display:none;min-width:0}
+.view-panel.is-active{display:block;animation:view-enter .28s cubic-bezier(.2,.75,.25,1) both}
+@keyframes view-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.view-intro{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:0 0 18px;padding:0 0 14px;border-bottom:1px solid rgba(185,210,212,.13)}
+.view-intro h2{margin:0;padding:0;border:0;font-size:clamp(19px,3vw,25px);letter-spacing:-.045em;text-transform:none;color:#edf4f5}
+.view-intro h2:before{display:none}
+.view-intro p{margin:5px 0 0;color:#91a1a9;font-size:11px}
+.view-count{color:#82959d;font-size:9px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+.view-panel>.mu{margin:8px 0 14px}
+#asset-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:10px 12px;border:1px solid rgba(211,235,229,.13);border-radius:12px;background:rgba(11,22,29,.58)}
+.asset-tools-current{display:flex;align-items:center;gap:8px;min-width:0}
+.asset-tools-current .current-dot{display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#9bdc82;box-shadow:0 0 10px rgba(155,220,130,.65)}
+.asset-tools-current small{display:block;color:#82979b;font-size:7px;font-weight:800;letter-spacing:.16em}
+.asset-tools-current strong{display:block;color:#eff8f1;font-size:12px}
+#island-assets{display:flex;align-items:center;gap:5px;min-width:0;overflow-x:auto;scrollbar-width:none}
+#island-assets::-webkit-scrollbar{display:none}
+.island-asset{flex:0 0 auto;padding:7px 9px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9bc;font:inherit;cursor:pointer}
+.island-asset[aria-current=true]{border-color:rgba(168,217,192,.24);background:rgba(168,217,192,.11);color:#eaf6ed}
+.island-asset b{font-size:10px}.island-asset small{display:none}
+.island-manage{flex:0 0 auto;padding:8px 10px;border:1px solid rgba(213,235,228,.15);border-radius:9px;background:rgba(215,237,227,.08);color:#dcebe3;font-size:10px;font-weight:750;cursor:pointer}
+#desk-tab-island{position:fixed;z-index:70;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(620px,calc(100vw - 24px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:7px;border:1px solid rgba(220,239,235,.2);border-radius:24px;background:rgba(24,29,31,.78);backdrop-filter:blur(28px) saturate(175%);-webkit-backdrop-filter:blur(28px) saturate(175%);box-shadow:0 16px 52px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.12)}
+.desk-tab{display:flex;min-width:0;min-height:58px;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 3px;border:1px solid transparent;border-radius:18px;background:transparent;color:#c3cdca;font:inherit;cursor:pointer;transition:background .2s ease,color .2s ease,transform .2s ease}
+.desk-tab .tab-icon{font-size:20px;line-height:1}
+.desk-tab .tab-label{font-size:9px;font-weight:700;white-space:nowrap}
+.desk-tab[aria-current=page]{background:rgba(5,10,12,.58);border-color:rgba(255,255,255,.07);color:#a9d9bd}
+.desk-tab:active{transform:scale(.96)}
+#asset-picker{z-index:90}
+@media(max-width:760px){
+ body{padding:12px 12px calc(104px + env(safe-area-inset-bottom))}
+ .desk-views{min-height:58vh}
+ .view-intro{align-items:start;flex-direction:column;gap:4px}
+ #asset-tools{gap:7px;padding:8px}
+ .asset-tools-current{display:none}
+ #island-assets{flex:1}
+ .island-manage{font-size:0;padding:8px 10px}
+ .island-manage:before{content:"＋";font-size:15px}
+ #desk-tab-island{bottom:calc(7px + env(safe-area-inset-bottom));width:calc(100vw - 20px);padding:6px;border-radius:22px}
+ .desk-tab{min-height:55px;border-radius:17px}
+ .desk-tab .tab-icon{font-size:19px}
+ .desk-tab .tab-label{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){.view-panel.is-active{animation:none}.desk-tab{transition:none}}
+
 </style>
 </head>
 <body>
@@ -278,10 +326,12 @@ a:focus-visible,summary:focus-visible,button:focus-visible,input:focus-visible{o
 <footer>Sadece öneri, yatırım tavsiyesi değildir. Sonuçlar simülasyondur: komisyon (yön başına %0,1) ve kayma hesaba katılır. Limit giriş için fiyatın limitin altına inmesi gerekir, dolum mumunda hedef sayılmaz, stop ve hedef aynı mumdaysa stop sayılır. Geçmiş sonuç geleceği garanti etmez.</footer>
 </main>
 
-<nav id="asset-island" aria-label="Varlıklar arasında geçiş">
-  <div class="island-current"><span class="current-dot" aria-hidden="true"></span><div><small>SEÇİLİ VARLIK</small><strong id="island-current-symbol">—</strong></div></div>
-  <div id="island-assets" aria-label="Hızlı varlık seçimi"><span class="mu">Varlıklar yükleniyor…</span></div>
-  <button class="island-manage" id="open-asset-picker" type="button" aria-haspopup="dialog" aria-controls="asset-picker"><span>Varlıkları yönet</span></button>
+<nav id="desk-tab-island" aria-label="MarketPulse bölümleri">
+  <button class="desk-tab" type="button" data-view="overview" aria-current="page"><span class="tab-icon" aria-hidden="true">⌂</span><span class="tab-label">Genel</span></button>
+  <button class="desk-tab" type="button" data-view="analysis"><span class="tab-icon" aria-hidden="true">⌁</span><span class="tab-label">Analiz</span></button>
+  <button class="desk-tab" type="button" data-view="recommendations"><span class="tab-icon" aria-hidden="true">⇧</span><span class="tab-label">Öneriler</span></button>
+  <button class="desk-tab" type="button" data-view="history"><span class="tab-icon" aria-hidden="true">↺</span><span class="tab-label">Geçmiş</span></button>
+  <button class="desk-tab" type="button" data-view="system"><span class="tab-icon" aria-hidden="true">⚙</span><span class="tab-label">Sistem</span></button>
 </nav>
 <dialog id="asset-picker" aria-labelledby="picker-title">
   <div class="picker-head"><div><h2 id="picker-title">Varlık seç</h2><p>Takip listenizdeki analizlere hızlıca geçin.</p></div><button class="picker-close" id="close-asset-picker" type="button" aria-label="Kapat">×</button></div>
@@ -415,6 +465,56 @@ function coinBody(t,d){
   return h+chart(t.chart,lv)+(t.bt?btText(t.bt):'')+wfText(t.wf);
 }
 
+
+function buildDeskViews(){
+  var app=document.getElementById("app");
+  if(!app||app.dataset.viewsBuilt)return;
+  app.dataset.viewsBuilt="1";
+  var groups={overview:[],analysis:[],recommendations:[],history:[],system:[]};
+  var active="overview";
+  Array.prototype.slice.call(app.children).forEach(function(node){
+    if(node.tagName==="H2"){
+      var heading=node.textContent.toLocaleLowerCase("tr");
+      if(heading.indexOf("aktif öneriler")>=0)active="recommendations";
+      else if(heading.indexOf("teknik analiz")>=0||heading.indexOf("hacim taraması")>=0)active="analysis";
+      else if(heading.indexOf("geçmiş öneriler")>=0)active="history";
+      else if(heading.indexOf("ileri test")>=0||heading.indexOf("algoritma")>=0)active="system";
+    }
+    groups[active].push(node);
+  });
+  var labels={
+    overview:["Piyasa özeti","Önemli piyasa verileri ve risk görünümü."],
+    analysis:["Analiz masası","Varlıkları incele, teknik sinyalleri karşılaştır."],
+    recommendations:["Öneriler","Aktif işlem fikirleri ve bekleyen sinyaller."],
+    history:["Geçmiş","Tamamlanan öneriler ve performans kayıtları."],
+    system:["Sistem ve doğrulama","Modelin çalışma mantığı ve ileri test sonuçları."]
+  };
+  var views=document.createElement("div");views.className="desk-views";
+  Object.keys(groups).forEach(function(key){
+    var panel=document.createElement("section");panel.className="view-panel"+(key==="overview"?" is-active":"");panel.dataset.panel=key;
+    panel.setAttribute("aria-label",labels[key][0]);
+    var intro=document.createElement("header");intro.className="view-intro";
+    intro.innerHTML="<div><h2>"+labels[key][0]+"</h2><p>"+labels[key][1]+"</p></div><span class='view-count'>MARKETPULSE / "+String(Object.keys(groups).indexOf(key)+1).padStart(2,"0")+"</span>";
+    panel.appendChild(intro);
+    if(key==="analysis"){
+      var tools=document.createElement("div");tools.id="asset-tools";
+      tools.innerHTML="<div class='asset-tools-current'><span class='current-dot' aria-hidden='true'></span><div><small>SEÇİLİ VARLIK</small><strong id='island-current-symbol'>—</strong></div></div><div id='island-assets' aria-label='Hızlı varlık seçimi'><span class='mu'>Varlıklar yükleniyor…</span></div><button class='island-manage' id='open-asset-picker' type='button' aria-haspopup='dialog' aria-controls='asset-picker'>Varlık seç</button>";
+      panel.appendChild(tools);
+    }
+    groups[key].forEach(function(node){panel.appendChild(node)});
+    views.appendChild(panel);
+  });
+  app.replaceChildren(views);
+  var tabs=Array.prototype.slice.call(document.querySelectorAll(".desk-tab"));
+  function activate(key){
+    tabs.forEach(function(tab){var on=tab.dataset.view===key;tab.setAttribute("aria-current",on?"page":"false");});
+    Array.prototype.forEach.call(views.children,function(panel){panel.classList.toggle("is-active",panel.dataset.panel===key)});
+    var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({top:0,behavior:reduce?"auto":"smooth"});
+  }
+  tabs.forEach(function(tab){tab.addEventListener("click",function(){activate(tab.dataset.view)})});
+}
+
 function mountAssetIsland(items){
   var dock=document.getElementById("island-assets");
   var dialog=document.getElementById("asset-picker");
@@ -543,6 +643,7 @@ fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(functio
   '<li><b>Duyarlılık:</b> Korku/Açgözlülük 80 ve üstü ya da BTC fonlama oranı %0,05 üstü olursa şüpheci bot itiraz eder. Veriye ulaşılamazsa atlanır.</li>'+
   '<li><b>Simülasyon kuralları:</b> Backtest girişi sinyalin ertesi mumunun açılışıdır (+kayma). Canlı limit önerilerinde fiyat limitin altına inmeden dolum sayılmaz, dolum mumunda hedef sayılmaz, stop ve hedef aynı mumdaysa stop. Üst zaman dilimi mumları ancak kapandıktan sonra kullanılır. Backtest’te BTC filtresi yoktur, spot işlemde fonlama maliyeti olmaz.</li></ul></details>';
   document.getElementById("app").innerHTML=h;
+  buildDeskViews();
   mountAssetIsland(w);
   Array.prototype.forEach.call(document.querySelectorAll("details.coin"),function(el){
     el.addEventListener("toggle",function(){
