@@ -230,7 +230,7 @@ a:focus-visible,summary:focus-visible,button:focus-visible,input:focus-visible{o
 .picker-open .picker-price{color:#c4d3d1;font-variant-numeric:tabular-nums}
 .picker-pin{width:35px;height:35px;border:1px solid rgba(190,215,210,.12);border-radius:10px;background:rgba(255,255,255,.04);color:#81959a;font-size:15px;cursor:pointer}
 .picker-pin[aria-pressed="true"]{color:#e9c47b;border-color:rgba(233,196,123,.28);background:rgba(233,196,123,.09)}
-.picker-empty{padding:22px;text-align:center;color:#8fa1a5;font-size:12px}
+.picker-empty{padding:22px;text-align:center;color:#8fa1a5;font-size:12px}.picker-note{padding:0 20px 17px;color:#71868b;font-size:10px;line-height:1.5}
 @media(max-width:760px){
   body{padding:12px 12px 136px}
   .topnav{top:7px;margin-bottom:24px}
@@ -286,7 +286,7 @@ a:focus-visible,summary:focus-visible,button:focus-visible,input:focus-visible{o
 <dialog id="asset-picker" aria-labelledby="picker-title">
   <div class="picker-head"><div><h2 id="picker-title">Varlık seç</h2><p>Takip listenizdeki analizlere hızlıca geçin.</p></div><button class="picker-close" id="close-asset-picker" type="button" aria-label="Kapat">×</button></div>
   <div class="picker-search"><input id="asset-search" type="search" placeholder="Coin veya sembol ara…" autocomplete="off" aria-label="Varlık ara"></div>
-  <div class="picker-list" id="asset-picker-list"></div>
+  <div class="picker-list" id="asset-picker-list"></div><p class="picker-note">★ ile favorilerinizi sabitleyin. Favoriler bu cihazda saklanır; yeni coinlerin analiz listesine eklenmesi veri kaynağında ayrıca yapılmalıdır.</p>
 </dialog>
 <script>
 var TFL="1 saatlik",HTFL="4 saatlik",HTFS="4s";
@@ -490,7 +490,7 @@ function mountAssetIsland(items){
   });
   document.getElementById("close-asset-picker").addEventListener("click",function(){dialog.close()});
   dialog.addEventListener("click",function(e){if(e.target===dialog)dialog.close()});
-  if(items.length)activate(0);else{current.textContent="—";dock.innerHTML='<span class="mu">Varlık verisi yok</span>'}
+  if(items.length){current.textContent=symbol(items[0]);renderDock();renderPicker()}else{current.textContent="—";dock.innerHTML='<span class="mu">Varlık verisi yok</span>'}
 }
 
 fetch("data.json?t="+Date.now()).then(function(r){return r.json()}).then(function(d){
