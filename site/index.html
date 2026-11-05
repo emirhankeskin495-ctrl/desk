@@ -4,31 +4,63 @@
 <meta charset="utf-8">
 <title>MarketPulse Desk</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#090d16">
+<meta name="theme-color" content="#0b1714">
 <style>
-:root{color-scheme:dark;--bg:#090d16;--panel:#111827;--panel2:#151f30;--line:#243146;--text:#eef3fb;--muted:#94a3b8;--accent:#67e8c2;--blue:#7aa8ff;--gold:#f6c76b}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 12% 0%,#17263b 0,transparent 42%),var(--bg);color:var(--text);font:15px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;padding:28px 22px 44px}
-main{max-width:1120px;margin:auto}.bar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:8px 0 28px;border-bottom:1px solid var(--line)}.brand{font-weight:800;letter-spacing:.04em;font-size:15px}.brand span{color:var(--accent)}.status{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:6px 11px}
-.hero{padding:62px 0 38px;max-width:720px}.eyebrow{font-size:11px;letter-spacing:.2em;color:var(--accent);font-weight:800}.hero h1{font-size:clamp(38px,7vw,68px);line-height:1.02;letter-spacing:-.055em;margin:14px 0 18px}.hero p{color:var(--muted);font-size:16px;max-width:590px;margin:0}
-.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:24px 0 14px}.sectionhead h2{font-size:17px;margin:0}.sectionhead small{color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.asset{position:relative;display:flex;flex-direction:column;min-height:210px;padding:22px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#172337,#101827 72%);transition:transform .18s,border-color .18s,background .18s;overflow:hidden}.asset:hover{transform:translateY(-3px);border-color:#527b83;background:linear-gradient(145deg,#1b3440,#111827 75%)}.asset.primary{border-color:#286c65;background:linear-gradient(145deg,#123a3a,#10202d 78%)}.asset:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.assethead{display:flex;align-items:center;justify-content:space-between}.icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#ffffff0d;font-size:21px}.tag{font-size:10px;letter-spacing:.12em;color:var(--accent);font-weight:800}.soon{color:var(--gold)}.asset h3{font-size:23px;margin:25px 0 6px;letter-spacing:-.03em}.asset p{color:var(--muted);margin:0;max-width:440px;font-size:13px}.enter{margin-top:auto;padding-top:20px;font-size:12px;font-weight:700;color:var(--accent)}.disabled{opacity:.72;cursor:default}.disabled:hover{transform:none;border-color:var(--line);background:linear-gradient(145deg,#172337,#101827 72%)}.foot{margin-top:28px;color:#718096;font-size:12px;border-top:1px solid var(--line);padding-top:18px}
-@media(max-width:640px){body{padding:18px 15px 30px}.hero{padding:46px 0 26px}.grid{grid-template-columns:1fr}.asset{min-height:180px}.sectionhead{align-items:start;flex-direction:column;gap:4px}}
-
-/* MarketPulse directional atmosphere */
-body{position:relative;isolation:isolate;background:linear-gradient(180deg,#10251b 0%,#101713 43%,#211714 100%)}
-body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(135deg,rgba(125,205,91,var(--scroll-green,.16)),rgba(220,75,65,var(--scroll-red,.02)));transition:background .18s ease}.shell{position:relative;z-index:1}
-
+:root{color-scheme:dark;--bg:#080d12;--surface:#101a20;--surface-2:#142129;--line:#273a3c;--text:#edf5f0;--muted:#91a49c;--green:#9bdc82;--red:#ef7668;--gold:#e9c47b;--scroll-green:.18;--scroll-red:.02}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--bg);scrollbar-color:#40544b #0a1115}
+body{position:relative;isolation:isolate;min-height:100vh;margin:0;padding:24px clamp(18px,4vw,64px) 48px;background:linear-gradient(180deg,#10251b 0%,#0b1714 34%,#111615 68%,#241613 100%);color:var(--text);font:15px/1.6 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(155deg,rgba(112,202,113,var(--scroll-green)),rgba(211,76,66,var(--scroll-red)));transition:background .2s ease}
+body:after{content:"";position:fixed;z-index:0;pointer-events:none;width:70vw;height:70vw;max-width:900px;max-height:900px;top:-38vw;right:-18vw;border-radius:50%;background:radial-gradient(circle,rgba(119,190,133,.13),transparent 68%)}
+main{position:relative;z-index:1;max-width:1320px;margin:0 auto}
+.bar{position:sticky;top:12px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:64px;padding:10px 18px;border:1px solid rgba(207,236,219,.16);border-radius:16px;background:rgba(13,24,25,.72);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);box-shadow:0 12px 36px rgba(0,0,0,.18)}
+.brand{font-size:13px;font-weight:850;letter-spacing:.14em}.brand span{color:var(--green)}
+.status{display:flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid rgba(207,236,219,.13);border-radius:999px;color:#b6c8bd;font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+.status:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(155,220,130,.7)}
+.hero{max-width:820px;padding:clamp(72px,11vw,142px) 0 72px}
+.eyebrow{display:flex;align-items:center;gap:12px;color:#a7d7a4;font-size:10px;font-weight:800;letter-spacing:.22em;text-transform:uppercase}
+.eyebrow:before{content:"";width:28px;height:1px;background:currentColor}
+.hero h1{max-width:850px;margin:20px 0 22px;font-size:clamp(54px,9vw,112px);line-height:.92;letter-spacing:-.085em;font-weight:650;text-wrap:balance}
+.hero h1 span{color:#9bdc82}
+.hero p{max-width:590px;margin:0;color:#aab9b1;font-size:clamp(15px,1.6vw,18px);line-height:1.75}
+.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:12px 0 18px;padding-bottom:14px;border-bottom:1px solid rgba(211,235,220,.15)}
+.sectionhead h2{margin:0;font-size:13px;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
+.sectionhead small{color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.asset{position:relative;isolation:isolate;display:flex;flex-direction:column;min-height:250px;overflow:hidden;padding:26px 28px;border:1px solid rgba(210,235,220,.14);border-radius:8px;background:linear-gradient(145deg,rgba(20,34,37,.96),rgba(12,22,25,.98) 72%);color:inherit;text-decoration:none;transition:transform .22s ease,border-color .22s ease,background-color .22s ease}
+.asset:before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;background:linear-gradient(125deg,rgba(147,213,140,.1),transparent 55%);transition:opacity .22s ease}
+.asset:hover{transform:translateY(-3px);border-color:rgba(165,218,157,.5)}
+.asset:hover:before{opacity:1}
+.asset.primary{border-color:rgba(145,211,133,.45);background:linear-gradient(130deg,rgba(25,58,43,.96),rgba(12,26,26,.98) 76%)}
+.asset.primary:after{content:"";position:absolute;right:-55px;bottom:-100px;width:260px;height:260px;border:1px solid rgba(160,221,142,.18);border-radius:50%;box-shadow:0 0 0 28px rgba(160,221,142,.025),0 0 0 58px rgba(160,221,142,.02);pointer-events:none}
+.assethead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.icon{display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(219,240,225,.17);border-radius:10px;background:rgba(220,245,227,.06);color:#d5e8d8;font-size:20px}
+.tag{color:#a9dc9c;font-size:10px;font-weight:800;letter-spacing:.16em}
+.soon{color:#d6bd83}
+.asset h3{margin:34px 0 8px;font-size:clamp(23px,3vw,30px);font-weight:650;letter-spacing:-.045em}
+.asset p{max-width:460px;margin:0;color:#9aada4;font-size:13px;line-height:1.7}
+.enter{margin-top:auto;padding-top:24px;color:#b7e5a8;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+.enter span{display:inline-block;margin-left:7px;transition:transform .2s ease}
+.asset:hover .enter span{transform:translate(3px,-3px)}
+.disabled{opacity:.58;cursor:not-allowed}
+.disabled:hover{transform:none;border-color:rgba(210,235,220,.14)}
+.disabled:hover:before{opacity:0}
+.disabled .enter{color:#b9aa84}
+.foot{margin-top:34px;padding-top:18px;border-top:1px solid rgba(211,235,220,.13);color:#82968c;font-size:11px;letter-spacing:.02em}
+a:focus-visible{outline:2px solid #c2f0ad;outline-offset:4px}.skip-link{position:fixed;top:8px;left:8px;z-index:30;padding:10px 14px;transform:translateY(-160%);border:1px solid #c2f0ad;border-radius:5px;background:#10251b;color:#fff}.skip-link:focus{transform:translateY(0)}
+@media(max-width:680px){body{padding:14px 14px 30px}.bar{top:8px;min-height:56px;padding:8px 12px}.hero{padding:74px 0 54px}.grid{grid-template-columns:1fr}.asset{min-height:215px;padding:22px}.sectionhead{align-items:start;flex-direction:column;gap:5px}.status{font-size:9px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
 </style>
 </head>
-<body><main>
+<body><a class="skip-link" href="#main-content">Ana içeriğe geç</a><main id="main-content">
 <header class="bar"><div class="brand">MARKETPULSE <span>DESK</span></div><div class="status">ANALİZ PLATFORMU</div></header>
-<section class="hero"><div class="eyebrow">PİYASALARI TEK MERKEZDEN TAKİP ET</div><h1>MarketPulse<br>Desk.</h1><p>Farklı varlık sınıfları için analiz masalarına buradan ulaş. Her masa kendi piyasa verilerini ve analiz araçlarını sunar.</p></section>
+<section class="hero"><div class="eyebrow">PİYASALARI TEK MERKEZDEN TAKİP ET</div><h1>MarketPulse<br><span>Desk.</span></h1><p>Farklı varlık sınıfları için analiz masalarına buradan ulaş. Her masa kendi piyasa verilerini ve analiz araçlarını sunar.</p></section>
 <div class="sectionhead"><h2>Analiz masaları</h2><small>Bir varlık sınıfı seçerek devam et</small></div>
 <section class="grid">
-<a class="asset primary" href="crypto.html"><div class="assethead"><div class="icon">₿</div><span class="tag">CANLI MASA</span></div><h3>Crypto Desk</h3><p>Kripto piyasası taraması, teknik göstergeler, sinyaller, risk kontrolleri ve performans doğrulaması.</p><div class="enter">Masaya gir <span aria-hidden="true">↗</span></div></a>
-<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon">↗</div><span class="tag soon">YAKINDA</span></div><h3>Equity Desk</h3><p>Hisse senetleri ve endeksler için analiz alanı. Veri kaynağı ve doğrulama altyapısı hazırlanıyor.</p><div class="enter">Henüz kullanıma açık değil</div></div>
-<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon">⇄</div><span class="tag soon">YAKINDA</span></div><h3>FX Desk</h3><p>Döviz çiftleri, majör pariteler ve kur hareketleri için ayrı analiz alanı.</p><div class="enter">Henüz kullanıma açık değil</div></div>
-<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon">◈</div><span class="tag soon">YAKINDA</span></div><h3>Commodities Desk</h3><p>Altın, gümüş, enerji ve diğer emtialar için piyasa izleme ve analiz alanı.</p><div class="enter">Henüz kullanıma açık değil</div></div>
+<a class="asset primary" href="crypto.html"><div class="assethead"><div class="icon" aria-hidden="true">₿</div><span class="tag">CANLI MASA</span></div><h3>Crypto Desk</h3><p>Kripto piyasası taraması, teknik göstergeler, sinyaller, risk kontrolleri ve performans doğrulaması.</p><div class="enter">Masaya gir <span aria-hidden="true">↗</span></div></a>
+<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon" aria-hidden="true">↗</div><span class="tag soon">YAKINDA</span></div><h3>Equity Desk</h3><p>Hisse senetleri ve endeksler için analiz alanı. Veri kaynağı ve doğrulama altyapısı hazırlanıyor.</p><div class="enter">Henüz kullanıma açık değil</div></div>
+<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon" aria-hidden="true">⇄</div><span class="tag soon">YAKINDA</span></div><h3>FX Desk</h3><p>Döviz çiftleri, majör pariteler ve kur hareketleri için ayrı analiz alanı.</p><div class="enter">Henüz kullanıma açık değil</div></div>
+<div class="asset disabled" aria-disabled="true"><div class="assethead"><div class="icon" aria-hidden="true">◈</div><span class="tag soon">YAKINDA</span></div><h3>Commodities Desk</h3><p>Altın, gümüş, enerji ve diğer emtialar için piyasa izleme ve analiz alanı.</p><div class="enter">Henüz kullanıma açık değil</div></div>
 </section>
 <footer class="foot">MarketPulse Desk · Analiz ve karar destek platformu. İçerikler yatırım tavsiyesi değildir.</footer>
 </main><script>
