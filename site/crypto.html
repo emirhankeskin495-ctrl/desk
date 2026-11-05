@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="utf-8">
@@ -131,7 +131,7 @@ details.coin>summary{grid-template-columns:1fr auto auto;grid-template-areas:"s 
 .dtb{display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap}
 .dtools{display:none;align-items:center;gap:4px;flex-wrap:wrap;padding:3px;border:1px solid var(--bd);border-radius:10px;background:var(--card)}
 .cw.fs .dtools{display:flex}
-.cw.fs{position:fixed;inset:0;z-index:60;overflow:auto;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg)}
+.cw.fs{position:fixed;inset:0;z-index:60;overflow:auto;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:var(--bg)}
 .cw.fs svg.pc{max-width:none;margin-top:8px}
 .cw.fs .dtb{margin-top:0}
 .fs-title{margin-bottom:8px;font-size:18px}
@@ -515,7 +515,7 @@ document.addEventListener("keydown",function(e){
 var FSCTX={items:[],d:{}};
 function fsDraw(cw){
   var t=FSCTX.items.filter(function(x){return x.sym===cw.dataset.sym})[0];if(!t)return;
-  var W=Math.max(320,Math.min(1600,window.innerWidth-32)),PH=Math.max(200,window.innerHeight-(window.innerWidth<700?260:300));
+  var cs=getComputedStyle(cw),W=Math.max(320,Math.min(1600,Math.floor(cw.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight))||window.innerWidth-32)),PH=Math.max(200,window.innerHeight-(window.innerWidth<700?260:300));
   cw.innerHTML='<div class="fs-title"><b>'+esc(t.sym.replace(/USDT$/,""))+'</b> '+fm(t.price)+'</div>'+drawBar()+chart(t.chart,coinLv(t,FSCTX.d),{W:W,PH:PH,RH:54,MH:44});
   var b=cw.querySelector(".dfull");
   if(b){b.title="Tam ekrandan çık";b.setAttribute("aria-label","Tam ekrandan çık");b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+DI.exit+'</svg><span>Kapat</span>'}
