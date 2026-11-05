@@ -73,14 +73,14 @@ details.coin[open][data-mood="SAT"]{border-color:#985344}
 :root{color-scheme:dark;--bg:#091116;--card:#111c22;--tx:#edf4ef;--mu:#91a49c;--bd:#293b3d;--ok:#9bdc82;--okb:#193323;--bad:#ef7668;--badb:#3a201f;--wt:#e9c47b;--wtb:#382e1b;--nt:#c1d0c8;--ntb:#202d30;--glass:rgba(14,27,29,.76)}
 html{background:var(--bg);scrollbar-color:#40544b #0a1115}
 body{position:relative;isolation:isolate;min-height:100vh;padding:24px clamp(14px,3vw,42px) 48px;background:linear-gradient(180deg,#10251b 0%,#0b1714 28%,#0c1517 66%,#211714 100%);color:var(--tx);font:14px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(155deg,rgba(112,202,113,var(--scroll-green,.18)),rgba(211,76,66,var(--scroll-red,.02)));transition:background .2s ease}
-body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(139,211,127,.12),transparent 56%);opacity:var(--signal-green,0);transition:opacity .3s ease}
+body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(155deg,rgba(112,202,113,var(--scroll-green,.18)),rgba(211,76,66,var(--scroll-red,.02)));transition:background .2s ease}
+body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(139,211,127,.12),transparent 56%);opacity:var(--signal-green,0);transition:opacity .3s ease}
 html[data-market-mood="SAT"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(226,93,79,.17),transparent 58%);opacity:var(--signal-red,0)}
 html[data-market-mood="AL"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(139,220,123,.17),transparent 58%);opacity:var(--signal-green,0)}
 html[data-market-mood="BEKLE"] body:after{background:radial-gradient(ellipse at 50% 0%,rgba(190,190,160,.08),transparent 58%);opacity:.8}
 main{position:relative;z-index:1;max-width:1320px;margin:0 auto}
 .topnav{position:sticky;top:10px;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 28px;padding:12px 16px;border:1px solid rgba(215,239,223,.15);border-radius:14px;background:var(--glass);backdrop-filter:blur(22px) saturate(155%);-webkit-backdrop-filter:blur(22px) saturate(155%);box-shadow:0 12px 34px rgba(0,0,0,.18);font-size:10px;color:#aabdb2;letter-spacing:.13em}
-.topnav a{display:inline-flex;align-items:center;gap:8px;color:#e5f0e8;text-decoration:none;font-weight:800;letter-spacing:.06em}
+.skip-link{position:fixed;top:8px;left:8px;z-index:30;padding:10px 14px;transform:translateY(-160%);border:1px solid #c2f0ad;border-radius:5px;background:#10251b;color:#fff}.skip-link:focus{transform:translateY(0)}\n.topnav a{display:inline-flex;align-items:center;gap:8px;color:#e5f0e8;text-decoration:none;font-weight:800;letter-spacing:.06em}
 .topnav a:hover{color:var(--ok)}
 h1{margin:0 0 4px;font-size:clamp(30px,4vw,44px);font-weight:650;letter-spacing:-.06em;line-height:1.05}
 h2{display:flex;align-items:center;gap:12px;margin:34px 0 12px;padding-bottom:10px;border-bottom:1px solid rgba(210,235,220,.13);color:#dbe8df;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
@@ -134,7 +134,7 @@ a:focus-visible,summary:focus-visible,button:focus-visible{outline:2px solid #bc
 <body>
 <main>
 <div class="topnav"><a href="./">← MarketPulse Desk</a><span>MARKETPULSE / CRYPTO</span></div><h1>Crypto Desk</h1>
-<div class="sub" id="upd">Yükleniyor…</div>
+<div class="sub" id="upd" aria-live="polite">Yükleniyor…</div>
 <div id="app"></div>
 <footer>Sadece öneri, yatırım tavsiyesi değildir. Sonuçlar simülasyondur: komisyon (yön başına %0,1) ve kayma hesaba katılır. Limit giriş için fiyatın limitin altına inmesi gerekir, dolum mumunda hedef sayılmaz, stop ve hedef aynı mumdaysa stop sayılır. Geçmiş sonuç geleceği garanti etmez.</footer>
 </main>
@@ -143,7 +143,7 @@ var TFL="1 saatlik",HTFL="4 saatlik",HTFS="4s";
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function fm(x){x=Number(x);if(!isFinite(x))return "-";return String(Number(x.toPrecision(6)))}
 function ago(ms){var m=Math.round(ms/60000);if(m<1)return "az önce";if(m<60)return m+" dk önce";var h=Math.floor(m/60);return h+" sa "+(m%60)+" dk önce"}
-function tm(iso){return new Date(iso).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
+function tm(iso){return new Intl.DateTimeFormat("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(iso))}
 function chip(t,c){return '<span class="chip '+(c||"")+'">'+esc(t)+'</span>'}
 var STC={"HEDEF":"ok","STOP":"bad","AÇIK":"wt","BEKLİYOR":"wt"};
 var SGC={"AL":"ok","ZAYIF":"wt","SAT":"bad","BEKLE":""};
@@ -198,7 +198,7 @@ function chart(c,lv){
   s+='<line x1="4" x2="'+Wp+'" y1="'+r1(z)+'" y2="'+r1(z)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+r1(z+3)+'">MACD 0</text>';
   for(i=0;i<n;i++){var hh=mx?c.mh[i]/mx*(MH/2-2):0;s+='<rect x="'+r1(X(i)-bw/2)+'" y="'+r1(hh>=0?z-hh:z)+'" width="'+r1(bw)+'" height="'+r1(Math.max(.6,Math.abs(hh)))+'" class="'+(hh>=0?"up":"dn")+'"/>'}
   var L=n-1;
-  return '<svg viewBox="0 0 '+W+" "+H+'">'+s+'</svg>'+
+  return '<svg role="img" aria-label="Fiyat mum grafiği, EMA20, EMA50, Bollinger bantları, RSI ve MACD göstergeleri" viewBox="0 0 '+W+" "+H+'">'+s+'</svg>'+
   '<div class="legend">Son kapanış <b>'+fm(c.c[L])+'</b> · <span style="color:#f59e0b">━ EMA20 '+fm(c.e20[L])+'</span> · <span style="color:#3b82f6">━ EMA50 '+fm(c.e50[L])+'</span> · Bollinger alt/üst '+fm(c.bl[L])+' / '+fm(c.bu[L])+' · <span style="color:var(--ok)">▲ AL</span> <span style="color:var(--bad)">▼ SAT</span> ('+TFL+' skorun değiştiği mum)</div>';
 }
 function btChart(b){
@@ -210,7 +210,7 @@ function btChart(b){
   function sg(v){return (v>0?"+":"")+v+"%"}
   var s='<line x1="4" x2="'+Wp+'" y1="'+Y(0)+'" y2="'+Y(0)+'" class="gl"/><text x="'+(Wp+4)+'" y="'+(Y(0)+3)+'">0%</text>'+pl(b.bhc,"bh")+pl(b.curve,"eq");
   s+='<text x="'+(Wp+4)+'" y="'+(Y(b.curve[n-1])-2)+'" style="fill:#3b82f6">'+sg(b.curve[n-1])+'</text><text x="'+(Wp+4)+'" y="'+(Y(b.bhc[n-1])+9)+'">'+sg(b.bhc[n-1])+'</text>';
-  return '<svg viewBox="0 0 '+W+" "+H+'">'+s+'</svg>';
+  return '<svg role="img" aria-label="Strateji getirisi ile al ve tut karşılaştırma grafiği" viewBox="0 0 '+W+" "+H+'">'+s+'</svg>';
 }
 function btText(b){
   if(!b.n)return '<div class="mu">Son ~'+b.days+' günde bu stratejide hiç AL sinyali oluşmadı, backtest yapılamadı.</div>';
